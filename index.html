@@ -1,0 +1,885 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>年間特別費</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .summary-item-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .summary-item-value {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .summary-item-percent {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .percent-bar {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .percent-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: #60a5fa;
+      transition: width 0.3s ease;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-left: 4px solid #3b82f6;
+      padding-left: 8px;
+      margin: 16px 0 8px;
+    }
+
+    .category-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      margin-bottom: 10px;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .category-name {
+      font-weight: 600;
+    }
+
+    .category-numbers {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      gap: 12px;
+      font-size: 0.85rem;
+    }
+
+    .category-numbers span {
+      white-space: nowrap;
+    }
+
+    .category-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+
+    .btn-xs {
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      border-radius: 999px;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .add-form {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #f9fafb;
+      border: 1px dashed #e5e7eb;
+    }
+
+    .add-form-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .add-form-row input {
+      width: 100%;
+      padding: 4px 6px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      box-sizing: border-box;
+    }
+
+    .add-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    details {
+      margin-top: 6px;
+      font-size: 0.85rem;
+    }
+
+    details summary {
+      cursor: pointer;
+      list-style: none;
+      outline: none;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details summary::before {
+      content: "? ";
+      font-size: 0.7rem;
+    }
+
+    details[open] summary::before {
+      content: "▼ ";
+    }
+
+    .transaction-list {
+      margin-top: 4px;
+      padding-left: 10px;
+    }
+
+    .transaction-item {
+      padding: 2px 0;
+      border-bottom: 1px dashed #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .transaction-text {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 70px 90px 1fr 120px; /* 日付 / 金額 / 内容 / 店舗 */
+      column-gap: 8px;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .transaction-text span {
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .transaction-empty {
+      color: #9ca3af;
+      font-style: italic;
+      padding: 4px 0;
+    }
+
+    .badge-percent {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #eff6ff;
+      color: #1d4ed8;
+      margin-left: 4px;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .text-danger {
+      color: #b91c1c;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .category-numbers {
+        grid-template-columns: 1fr;
+      }
+      .add-form-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .transaction-text {
+        grid-template-columns: 70px 90px;
+        grid-auto-rows: auto;
+        row-gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header-row">
+      <h1>年間特別費</h1>
+      <div class="top-actions">
+        <button id="load-dropbox-btn" class="btn-primary">読み込み（Dropbox）</button>
+        <button id="download-transactions-btn" class="btn-outline">支出データをダウンロード</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="summary-grid">
+        <div>
+          <div class="summary-item-label">予算</div>
+          <div class="summary-item-value" id="total-budget">0円</div>
+        </div>
+        <div>
+          <div class="summary-item-label">残高</div>
+          <div class="summary-item-value" id="total-remaining">0円</div>
+        </div>
+        <div>
+          <div class="summary-item-label">使用率</div>
+          <div class="summary-item-percent" id="total-percent">0%</div>
+          <div class="percent-bar">
+            <div class="percent-bar-fill" id="total-percent-bar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">費目別</div>
+    <div id="categories-container">
+      <!-- 費目がない場合の表示 -->
+      <div class="card">
+        <div class="transaction-empty">
+          まだ費目データがありません。「読み込み（Dropbox）」ボタンで categories.tsv / transactions.tsv をインポートしてください。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================
+    // 設定
+    // ==========================
+    // ・dropbox-config.json は index.html と同じ場所に配置してください。
+    // ・中身の例：
+    // {
+    //   "categories": "https://www.dropbox.com/s/XXXX/categories.tsv?dl=1",
+    //   "transactions": "https://www.dropbox.com/s/YYYY/transactions.tsv?dl=1"
+    // }
+    const DROPBOX_CONFIG_URL = "dropbox-config.json";
+
+    // ==========================
+    // 状態
+    // ==========================
+    const state = {
+      categories: [] // { id, name, budget, transactions: [{date, amount, description, shop}] }
+    };
+
+    // ==========================
+    // ユーティリティ
+    // ==========================
+    function formatYen(num) {
+      return num.toLocaleString("ja-JP") + "円";
+    }
+
+    function calcCategory(category) {
+      const used = category.transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const remaining = category.budget - used;
+      const percent = category.budget > 0 ? Math.min(100, (used / category.budget) * 100) : 0;
+      return { used, remaining, percent };
+    }
+
+    function calcTotal() {
+      let totalBudget = 0;
+      let totalUsed = 0;
+      state.categories.forEach((cat) => {
+        const { used } = calcCategory(cat);
+        totalBudget += cat.budget;
+        totalUsed += used;
+      });
+      const totalRemaining = totalBudget - totalUsed;
+      const percent = totalBudget > 0 ? Math.min(100, (totalUsed / totalBudget) * 100) : 0;
+      return { totalBudget, totalUsed, totalRemaining, percent };
+    }
+
+    function getPercentBadgeClass(percent) {
+      if (percent >= 100) return "badge-percent badge-danger";
+      if (percent >= 80) return "badge-percent badge-warning";
+      return "badge-percent";
+    }
+
+    function formatDateForView(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr || "";
+      return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" }); // 5/5
+    }
+
+    // ==========================
+    // TSVの読み込み
+    // ==========================
+
+    // categories.tsv フォーマット（タブ区切り）：
+    // 費目名<TAB>予算
+    // 例：
+    // 費目名  予算
+    // 洋服    30000
+    // レジャー 50000
+    function importCategoriesFromTsv(text) {
+      const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+      if (lines.length === 0) {
+        state.categories = [];
+        return;
+      }
+
+      const header = lines[0].split("\t");
+      // 1列目は「費目名」という前提（厳密チェックは省略）
+      const newCategories = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split("\t");
+        while (cols.length < 2) cols.push("");
+        const [name, budgetStr] = cols;
+        if (!name) continue;
+        const b = parseInt((budgetStr || "0").replace(/,/g, ""), 10);
+        const budget = isNaN(b) ? 0 : b;
+
+        newCategories.push({
+          id: "cat-" + i + "-" + Math.random().toString(36).slice(2),
+          name,
+          budget,
+          transactions: []
+        });
+      }
+
+      state.categories = newCategories;
+    }
+
+    // transactions.tsv フォーマット（タブ区切り）：
+    // 費目<TAB>日付<TAB>店舗<TAB>内容<TAB>金額
+    // 例：
+    // 費目  日付        店舗      内容        金額
+    // 洋服  2025-01-03  ユニクロ  セーター    3000
+    function importTransactionsFromTsv(text) {
+      const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+      if (lines.length <= 1) {
+        // 既存の transactions は importCategoriesFromTsv で空にされている前提
+        return;
+      }
+
+      const header = lines[0].split("\t");
+      if (!header[0] || header[0].trim() !== "費目") {
+        // ヘッダが違う場合はとりあえず読み込みスキップ
+        console.warn("transactions.tsv header mismatch");
+      }
+
+      // いったん全て空に（TSVが正とみなす）
+      state.categories.forEach((cat) => {
+        cat.transactions = [];
+      });
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split("\t");
+        while (cols.length < 5) cols.push("");
+        const [categoryName, date, shop, description, amountStr] = cols;
+        if (!categoryName || !date) continue;
+
+        const amt = parseInt((amountStr || "0").replace(/,/g, ""), 10);
+        if (isNaN(amt)) continue;
+
+        let category = state.categories.find((c) => c.name === categoryName);
+        if (!category) {
+          // 費目TSVにない費目があった場合、予算0で作る
+          category = {
+            id: "cat-auto-" + i + "-" + Math.random().toString(36).slice(2),
+            name: categoryName,
+            budget: 0,
+            transactions: []
+          };
+          state.categories.push(category);
+        }
+
+        category.transactions.push({
+          date,
+          amount: amt,
+          description: description || "",
+          shop: shop || ""
+        });
+      }
+    }
+
+    // ==========================
+    // 支出TSVの書き出し
+    // ==========================
+    function buildTransactionsTsv() {
+      const lines = [];
+      lines.push("費目\t日付\t店舗\t内容\t金額");
+      state.categories.forEach((cat) => {
+        cat.transactions.forEach((t) => {
+          lines.push(
+            [
+              cat.name,
+              t.date,
+              t.shop || "",
+              t.description || "",
+              String(t.amount)
+            ].join("\t")
+          );
+        });
+      });
+      return lines.join("\r\n");
+    }
+
+    function downloadBlob(text, filename) {
+      const blob = new Blob([text], { type: "text/tab-separated-values;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ==========================
+    // localStorage 保存／読み込み（任意）
+    // ==========================
+    const STORAGE_KEY = "nentoku_state_v1";
+
+    function saveState() {
+      try {
+        const data = {
+          categories: state.categories.map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            budget: cat.budget,
+            transactions: cat.transactions.map((t) => ({
+              date: t.date,
+              amount: t.amount,
+              description: t.description,
+              shop: t.shop
+            }))
+          }))
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("saveState error", e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!data || !Array.isArray(data.categories)) return false;
+
+        state.categories = data.categories.map((cat, idx) => ({
+          id: cat.id || "cat-load-" + idx + "-" + Math.random().toString(36).slice(2),
+          name: cat.name || "未設定",
+          budget: typeof cat.budget === "number" ? cat.budget : 0,
+          transactions: Array.isArray(cat.transactions)
+            ? cat.transactions.map((t) => ({
+                date: t.date || "",
+                amount: typeof t.amount === "number" ? t.amount : 0,
+                description: t.description || "",
+                shop: t.shop || ""
+              }))
+            : []
+        }));
+        return true;
+      } catch (e) {
+        console.error("loadState error", e);
+        return false;
+      }
+    }
+
+    // ==========================
+    // 描画
+    // ==========================
+    function renderSummary() {
+      const { totalBudget, totalRemaining, percent } = calcTotal();
+      document.getElementById("total-budget").textContent = formatYen(totalBudget);
+      document.getElementById("total-remaining").textContent = formatYen(totalRemaining);
+      document.getElementById("total-percent").textContent = percent.toFixed(1) + "%";
+      document.getElementById("total-percent-bar").style.width = percent.toFixed(1) + "%";
+    }
+
+    function renderCategories() {
+      const container = document.getElementById("categories-container");
+
+      if (state.categories.length === 0) {
+        container.innerHTML = `
+          <div class="card">
+            <div class="transaction-empty">
+              まだ費目データがありません。「読み込み（Dropbox）」ボタンで categories.tsv / transactions.tsv をインポートしてください。
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const html = state.categories
+        .map((cat) => {
+          const { used, remaining, percent } = calcCategory(cat);
+          const percentClass = getPercentBadgeClass(percent);
+          const remainingClass = remaining < 0 ? "summary-item-value text-danger" : "summary-item-value";
+
+          const transactionsHtml =
+            cat.transactions.length === 0
+              ? `<div class="transaction-empty">まだ支出の記録がありません。</div>`
+              : cat.transactions
+                  .map((t, idx) => {
+                    const dateStr = formatDateForView(t.date);
+                    const amountStr = t.amount.toLocaleString("ja-JP") + "円";
+                    const shopText = t.shop || "";
+                    return `
+                  <div class="transaction-item" data-category-id="${cat.id}" data-index="${idx}">
+                    <div class="transaction-text">
+                      <span class="tran-date">${dateStr}</span>
+                      <span class="tran-amount">${amountStr}</span>
+                      <span class="tran-desc">${t.description}</span>
+                      <span class="tran-shop">${shopText}</span>
+                    </div>
+                    <div>
+                      <button type="button" class="btn-outline btn-xs edit-transaction" data-category-id="${cat.id}" data-index="${idx}">編集</button>
+                      <button type="button" class="btn-outline btn-xs delete-transaction" data-category-id="${cat.id}" data-index="${idx}">削除</button>
+                    </div>
+                  </div>
+                `;
+                  })
+                  .join("");
+
+          return `
+          <div class="category-card" data-category-id="${cat.id}">
+            <div class="category-header">
+              <div>
+                <div class="category-name">● ${cat.name}</div>
+                <div class="category-numbers">
+                  <span>予算：${formatYen(cat.budget)}</span>
+                  <span>残高：<span class="${remainingClass}">${formatYen(remaining)}</span></span>
+                  <span>使用率：${percent.toFixed(1)}% <span class="${percentClass}">${percent.toFixed(1)}%</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="percent-bar">
+              <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%"></div>
+            </div>
+            <div class="category-actions">
+              <button class="btn-primary toggle-add-form" data-category-id="${cat.id}">支出を記録</button>
+            </div>
+            <form class="add-form hidden add-transaction-form" data-category-id="${cat.id}" data-edit-index="">
+              <div class="add-form-row">
+                <input type="date" name="date" required />
+                <input type="number" name="amount" placeholder="金額" required min="1" />
+                <input type="text" name="description" placeholder="内容（例：セーター）" required />
+                <input type="text" name="shop" placeholder="店舗（任意）" />
+              </div>
+              <div class="add-form-actions">
+                <button type="button" class="btn-outline cancel-add">キャンセル</button>
+                <button type="submit" class="btn-primary submit-button">保存</button>
+              </div>
+            </form>
+            <details>
+              <summary>過去の支出</summary>
+              <div class="transaction-list">
+                ${transactionsHtml}
+              </div>
+            </details>
+          </div>
+        `;
+        })
+        .join("");
+
+      container.innerHTML = html;
+    }
+
+    // ==========================
+    // イベント付与
+    // ==========================
+    function attachCategoryEvents() {
+      // 「支出を記録」ボタン → フォーム表示切り替え
+      document.querySelectorAll(".toggle-add-form").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const categoryId = btn.dataset.categoryId;
+          const card = document.querySelector(`.category-card[data-category-id="${categoryId}"]`);
+          const form = card.querySelector(".add-transaction-form");
+          form.dataset.editIndex = "";
+          form.querySelector(".submit-button").textContent = "保存";
+          form.reset();
+          form.classList.toggle("hidden");
+        });
+      });
+
+      // フォーム送信（新規／編集）
+      document.querySelectorAll(".add-transaction-form").forEach((form) => {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const categoryId = form.dataset.categoryId;
+          const editIndex = form.dataset.editIndex;
+          const date = form.date.value;
+          const amount = parseInt(form.amount.value, 10);
+          const description = form.description.value.trim();
+          const shop = form.shop.value.trim();
+
+          if (!date || !amount || !description) {
+            alert("日付・金額・内容は必須です。");
+            return;
+          }
+
+          const category = state.categories.find((c) => c.id === categoryId);
+          if (!category) return;
+
+          const newData = { date, amount, description, shop };
+
+          if (editIndex !== undefined && editIndex !== "") {
+            const idx = parseInt(editIndex, 10);
+            if (category.transactions[idx]) {
+              category.transactions[idx] = newData;
+            }
+          } else {
+            category.transactions.push(newData);
+          }
+
+          form.reset();
+          form.dataset.editIndex = "";
+          form.classList.add("hidden");
+
+          renderAll();
+        });
+
+        const cancelBtn = form.querySelector(".cancel-add");
+        cancelBtn.addEventListener("click", () => {
+          form.reset();
+          form.dataset.editIndex = "";
+          form.classList.add("hidden");
+        });
+      });
+
+      // 支出の削除ボタン
+      document.querySelectorAll(".delete-transaction").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const categoryId = btn.dataset.categoryId;
+          const index = parseInt(btn.dataset.index, 10);
+          const category = state.categories.find((c) => c.id === categoryId);
+          if (!category) return;
+          const t = category.transactions[index];
+          if (!t) return;
+
+          const dateStr = formatDateForView(t.date);
+          const amountStr = t.amount.toLocaleString("ja-JP") + "円";
+          const shopStr = t.shop ? `\n店舗：${t.shop}` : "";
+
+          const message =
+            "次の支出を削除しますか？\n\n" +
+            `【費目】${category.name}\n` +
+            `日付：${dateStr}\n` +
+            `金額：${amountStr}\n` +
+            `内容：${t.description}` +
+            shopStr;
+
+          const ok = confirm(message);
+          if (!ok) return;
+
+          category.transactions.splice(index, 1);
+          renderAll();
+        });
+      });
+
+      // 支出の編集ボタン
+      document.querySelectorAll(".edit-transaction").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const categoryId = btn.dataset.categoryId;
+          const index = parseInt(btn.dataset.index, 10);
+          const category = state.categories.find((c) => c.id === categoryId);
+          if (!category) return;
+          const transaction = category.transactions[index];
+          if (!transaction) return;
+
+          const card = document.querySelector(`.category-card[data-category-id="${categoryId}"]`);
+          const form = card.querySelector(".add-transaction-form");
+
+          form.date.value = transaction.date;
+          form.amount.value = transaction.amount;
+          form.description.value = transaction.description;
+          form.shop.value = transaction.shop || "";
+
+          form.dataset.editIndex = String(index);
+          form.querySelector(".submit-button").textContent = "更新";
+          form.classList.remove("hidden");
+        });
+      });
+    }
+
+    function attachGlobalEvents() {
+      // Dropboxから読み込み
+      document.getElementById("load-dropbox-btn").addEventListener("click", async () => {
+        try {
+          const cfgRes = await fetch(DROPBOX_CONFIG_URL);
+          if (!cfgRes.ok) {
+            alert("設定ファイル(dropbox-config.json)を読み込めませんでした。場所とファイル名を確認してください。");
+            return;
+          }
+          const cfg = await cfgRes.json();
+          if (!cfg.categories || !cfg.transactions) {
+            alert("dropbox-config.json に categories / transactions のURLが設定されていません。");
+            return;
+          }
+
+          // categories.tsv
+          const catRes = await fetch(cfg.categories);
+          if (!catRes.ok) {
+            alert("Dropbox上の categories.tsv を読み込めませんでした。共有リンクとアクセス権を確認してください。");
+            return;
+          }
+          const catText = await catRes.text();
+          importCategoriesFromTsv(catText);
+
+          // transactions.tsv
+          const tranRes = await fetch(cfg.transactions);
+          if (tranRes.ok) {
+            const tranText = await tranRes.text();
+            importTransactionsFromTsv(tranText);
+          } else {
+            // 支出データが無い場合はスキップ（費目だけでも動作する）
+            console.warn("transactions.tsv not found or error:", tranRes.status);
+          }
+
+          renderAll();
+          alert("Dropboxからデータを読み込みました。");
+        } catch (e) {
+          console.error(e);
+          alert("Dropboxからの読み込み中にエラーが発生しました。");
+        }
+      });
+
+      // 支出TSVのダウンロード
+      document.getElementById("download-transactions-btn").addEventListener("click", () => {
+        const tsv = buildTransactionsTsv();
+        downloadBlob(tsv, "transactions.tsv");
+      });
+    }
+
+    // ==========================
+    // 全体レンダリング
+    // ==========================
+    function renderAll() {
+      renderSummary();
+      renderCategories();
+      attachCategoryEvents();
+      saveState();
+    }
+
+    // ==========================
+    // 起動
+    // ==========================
+    function bootstrap() {
+      loadState(); // あれば前回状態を復元
+      renderAll();
+      attachGlobalEvents();
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>
