@@ -416,33 +416,21 @@
 
   <script type="module">
     // ==========================
-    // Firebase 初期化
+    // Firebase 初期化（v12.6.0 CDN）
     // ==========================
-/* Firebase App */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-
-/* Firestore 基本 */
-import {
-  getFirestore,
-  collection,
-  doc
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-/* Firestore 読み取り */
-import {
-  getDocs,
-  query,
-  where,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-read.js";
-
-/* Firestore 書き込み */
-import {
-  addDoc,
-  updateDoc,
-  deleteDoc
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-write.js";
-
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      orderBy,
+      getDocs,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
     // ★★★ ここをあなたの firebaseConfig に置き換えてください ★★★
     const firebaseConfig = {
@@ -531,8 +519,8 @@ import {
     async function loadFiscalYearsFromCategories() {
       const snap = await getDocs(collection(db, "categories"));
       const yearsSet = new Set();
-      snap.forEach((doc) => {
-        const data = doc.data();
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
         if (typeof data.fiscalYear === "number") {
           yearsSet.add(data.fiscalYear);
         }
@@ -742,7 +730,7 @@ import {
 
     // ==========================
     // CSV エクスポート（タブ区切り）
-    // 日付は "YYYY/MM/DD" 形式
+    // 日付は "YYYY/MM/DD"
     // ==========================
     function buildTransactionsCsvForCurrentYear() {
       const header = ["費目", "日付", "店舗", "内容", "金額"];
@@ -754,7 +742,6 @@ import {
 
       state.transactions.forEach((t) => {
         const catName = catMap.get(t.categoryId) || "";
-        // 内部の日付は "YYYY-MM-DD" → CSVは "YYYY/MM/DD"
         const csvDate = t.date ? t.date.replace(/-/g, "/") : "";
         lines.push([
           catName,
@@ -797,7 +784,6 @@ import {
 
       const fiscalYear = state.currentFiscalYear;
 
-      // 費目名 → categoryId のマップ
       const catNameToId = new Map();
       state.categories.forEach((c) => {
         if (c.fiscalYear === fiscalYear) {
@@ -814,13 +800,11 @@ import {
         const [categoryName, dateCsv, shop, description, amountStr] = cols;
         if (!categoryName || !dateCsv) continue;
 
-        // CSVは "YYYY/MM/DD" → 内部は "YYYY-MM-DD"
         const dateNorm = dateCsv.trim().replace(/\//g, "-");
         if (!dateNorm) continue;
 
         const fy = calcFiscalYear(dateNorm);
         if (fy !== fiscalYear) {
-          // 他年度のものは今回スキップ
           continue;
         }
 
@@ -829,7 +813,6 @@ import {
 
         let catId = catNameToId.get(categoryName);
         if (!catId) {
-          // 現在の年度の費目になければ、予算0で新規作成
           const nowOrder = state.categories.length > 0
             ? Math.max(...state.categories.map((c) => c.order ?? 0)) + 1
             : 1;
@@ -845,7 +828,7 @@ import {
 
         await addDoc(collection(db, "transactions"), {
           categoryId: catId,
-          date: dateNorm,              // 内部保存は "YYYY-MM-DD"
+          date: dateNorm,
           shop: shop || "",
           description: description || "",
           amount,
@@ -1000,7 +983,6 @@ import {
         }
       });
 
-      // 新年度作成
       document.getElementById("new-year-btn").addEventListener("click", async () => {
         try {
           await createNextFiscalYearFromLast();
@@ -1010,7 +992,6 @@ import {
         }
       });
 
-      // 費目追加
       const addCatForm = document.getElementById("add-category-form");
       addCatForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -1031,7 +1012,6 @@ import {
         budgetInput.value = "";
       });
 
-      // CSVエクスポート
       document.getElementById("export-csv-btn").addEventListener("click", () => {
         if (!state.currentFiscalYear) {
           alert("年度が選択されていません。");
@@ -1042,7 +1022,6 @@ import {
         downloadBlob(csv, filename);
       });
 
-      // CSVインポート
       const csvInput = document.getElementById("csv-file-input");
       document.getElementById("import-csv-btn").addEventListener("click", () => {
         csvInput.value = "";
@@ -1066,7 +1045,6 @@ import {
     }
 
     function attachCategoryAndTransactionEvents() {
-      // 費目編集
       document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const card = btn.closest(".category-card");
@@ -1092,7 +1070,6 @@ import {
         });
       });
 
-      // 費目削除
       document.querySelectorAll(".category-card .delete-category").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const card = btn.closest(".category-card");
@@ -1103,7 +1080,6 @@ import {
         });
       });
 
-      // 「支出を記録」ボタン
       document.querySelectorAll(".category-card .toggle-add-form").forEach((btn) => {
         btn.addEventListener("click", () => {
           const card = btn.closest(".category-card");
@@ -1115,7 +1091,6 @@ import {
         });
       });
 
-      // 支出フォーム送信（新規 or 更新）
       document.querySelectorAll(".category-card .add-transaction-form").forEach((form) => {
         form.addEventListener("submit", async (e) => {
           e.preventDefault();
@@ -1154,7 +1129,6 @@ import {
         });
       });
 
-      // 支出編集ボタン
       document.querySelectorAll(".category-card .edit-transaction").forEach((btn) => {
         btn.addEventListener("click", () => {
           const item = btn.closest(".transaction-item");
@@ -1173,7 +1147,6 @@ import {
         });
       });
 
-      // 支出削除ボタン
       document.querySelectorAll(".category-card .delete-transaction").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const item = btn.closest(".transaction-item");
@@ -1203,7 +1176,7 @@ import {
         await loadDataForFiscalYear(state.currentFiscalYear);
       } catch (e) {
         console.error("初期化エラー:", e);
-        alert("初期化中にエラーが発生しました。Firebase設定やFirestoreルールを確認してください。");
+        alert("初期化中にエラーが発生しました。Firebase設定やFirestoreルール・インデックスを確認してください。");
       }
     }
 
