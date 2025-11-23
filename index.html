@@ -418,19 +418,31 @@
     // ==========================
     // Firebase 初期化
     // ==========================
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      orderBy,
-      getDocs,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      doc
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+/* Firebase App */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+
+/* Firestore 基本 */
+import {
+  getFirestore,
+  collection,
+  doc
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+/* Firestore 読み取り */
+import {
+  getDocs,
+  query,
+  where,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-read.js";
+
+/* Firestore 書き込み */
+import {
+  addDoc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-write.js";
+
 
     // ★★★ ここをあなたの firebaseConfig に置き換えてください ★★★
     const firebaseConfig = {
