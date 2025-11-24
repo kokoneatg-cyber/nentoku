@@ -372,64 +372,69 @@
 
 /* 過去の支出 1行全体 */
 .transaction-item {
-  padding: 2px 0;
+  display: flex;
+  align-items: center;
   border-bottom: 1px dashed #e5e7eb;
+  padding: 2px 0;
   font-size: 0.8rem;
+  gap: 6px;
 }
 
-/* テキスト部分をフレックス1行に */
+/* 左側：日付 / 金額 / 内容 / 店舗 */
 .transaction-text {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 4px;
-  width: 100%;
-  min-width: 0;              /* 子要素の省略を許可 */
   font-variant-numeric: tabular-nums;
 }
 
-/* 共通：1行で省略表示 */
+/* 共通：省略あり1行 */
 .transaction-text span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* 日付：最大5文字＋前後スペース ≒ 7ch */
+/* 日付：最大5文字（MM/DD）＋余白 → 7ch */
 .tran-date {
   flex: 0 0 7ch;
+  background: #eeeeee;
+  padding: 1px 3px;
+  border-radius: 4px;
 }
 
-/* 金額：最大「100,000円」くらいを想定、右詰め */
+/* 金額：右寄せ、固定幅 */
 .tran-amount {
   flex: 0 0 9ch;
   text-align: right;
 }
 
-/* 内容：残りのスペース全部 */
+/* 内容：残り全部を使う */
 .tran-desc {
   flex: 1 1 auto;
   min-width: 0;
+  background: #eeeeee;
+  padding: 1px 3px;
+  border-radius: 4px;
 }
 
-/* 店舗：全角5文字ぶん。長いときは省略 */
+/* 店舗：全角5文字分 */
 .tran-shop {
   flex: 0 0 5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 編集／削除ボタン部分はそのままでOK */
+/* 右端に固定配置される編集／削除ボタン */
 .transaction-actions {
   flex-shrink: 0;
   display: flex;
   gap: 4px;
 }
 
-.transaction-empty {
-  color: #9ca3af;
-  font-style: italic;
-  padding: 4px 0;
-}
-
-/* iPhone など横幅が狭い場合は 店舗カラムを非表示にする */
+/* 画面幅が狭いとき（iPhone）店舗フィールドを隠す */
 @media (max-width: 480px) {
   .tran-shop {
     display: none;
