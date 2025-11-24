@@ -255,44 +255,52 @@
     }
 
     .category-footer-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       margin-top: 8px;
-      gap: 8px;
     }
 
-    .category-footer-row details {
-      flex: 1;
+    .cat-details {
+      display: block;
     }
 
-    .category-footer-row summary {
+    .cat-details summary {
       cursor: pointer;
       font-size: 0.9rem;
       user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .cat-details summary::-webkit-details-marker {
       display: none;
     }
 
-    .cat-details summary {
-      position: relative;
-      padding-left: 1.2em;
-    }
-
     .cat-details summary::before {
       content: "▶";
-      position: absolute;
-      left: 0;
-      top: 0;
       font-size: 0.9rem;
       color: #555;
-      transition: transform 0.2s ease;
+      display: inline-block;
+      width: 1em;
     }
 
     .cat-details[open] summary::before {
-      transform: rotate(90deg);
+      content: "▼";
+    }
+
+    .category-footer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-footer-header .toggle-add-form {
+      white-space: nowrap;
+    }
+
+    .category-footer-body {
+      margin-top: 4px;
     }
 
     /* 支出追加フォーム */
@@ -1103,59 +1111,65 @@
                 const dateStr = formatDateForView(t.date);
                 const amountStr = t.amount.toLocaleString("ja-JP") + "円";
                 const shopStr = t.shop || "";
-                return `
-                  <div class="transaction-item" data-tran-id="${t.id}" data-category-id="${cat.id}">
+                return \`
+                  <div class="transaction-item" data-tran-id="\${t.id}" data-category-id="\${cat.id}">
                     <div class="transaction-text">
-                      <span class="tran-date">${dateStr}</span>
-                      <span class="tran-amount">${amountStr}</span>
-                      <span class="tran-desc">${t.description}</span>
-                      <span class="tran-shop">${shopStr}</span>
+                      <span class="tran-date">\${dateStr}</span>
+                      <span class="tran-amount">\${amountStr}</span>
+                      <span class="tran-desc">\${t.description}</span>
+                      <span class="tran-shop">\${shopStr}</span>
                     </div>
                     <div class="transaction-actions">
                       <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
                       <button type="button" class="btn-outline btn-xs delete-transaction">削除</button>
                     </div>
-                  </div>`;
+                  </div>\`;
               }).join("");
 
         const isFirst = index === 0;
         const isLast = index === state.categories.length - 1;
 
-        return `
-          <div class="category-card" data-category-id="${cat.id}">
+        return \`
+          <div class="category-card" data-category-id="\${cat.id}">
             <div class="category-header">
               <div class="category-title-row">
-                <span>● ${cat.name}</span>
+                <span>● \${cat.name}</span>
               </div>
               <div class="category-toolbar">
-                <button type="button" class="btn-outline btn-xs reorder-up" ${isFirst ? "disabled" : ""}>▲</button>
-                <button type="button" class="btn-outline btn-xs reorder-down" ${isLast ? "disabled" : ""}>▼</button>
+                <button type="button" class="btn-outline btn-xs reorder-up" \${isFirst ? "disabled" : ""}>▲</button>
+                <button type="button" class="btn-outline btn-xs reorder-down" \${isLast ? "disabled" : ""}>▼</button>
                 <button type="button" class="btn-outline btn-xs edit-category">編集</button>
                 <button type="button" class="btn-outline btn-xs delete-category">削除</button>
               </div>
             </div>
             <div class="category-numbers">
-              <span>予算：${formatYen(cat.budget)}</span>
-              <span>使用額：${formatYen(used)}</span>
-              <span>残高：<span style="color:${usageColor};">${formatYen(remaining)}</span></span>
+              <span>予算：\${formatYen(cat.budget)}</span>
+              <span>使用額：\${formatYen(used)}</span>
+              <span>残高：<span style="color:\${usageColor};">\${formatYen(remaining)}</span></span>
             </div>
             <div class="category-usage-row">
               <span>使用率：</span>
-              <span class="badge-percent" style="background-color:${usageColor}22;color:${usageColor};">
-                ${percent.toFixed(1)}%
+              <span class="badge-percent" style="background-color:\${usageColor}22;color:\${usageColor};">
+                \${percent.toFixed(1)}%
               </span>
               <div class="percent-bar">
-                <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%;background-color:${usageColor};"></div>
+                <div class="percent-bar-fill" style="width:\${percent.toFixed(1)}%;background-color:\${usageColor};"></div>
               </div>
             </div>
             <div class="category-footer-row">
               <details class="cat-details">
-                <summary>過去の支出</summary>
-                <div class="transaction-list">
-                  ${transactionsHtml}
+                <summary>
+                  <div class="category-footer-header">
+                    <span>過去の支出</span>
+                    <button class="btn-primary toggle-add-form" type="button">支出を記録</button>
+                  </div>
+                </summary>
+                <div class="category-footer-body">
+                  <div class="transaction-list">
+                    \${transactionsHtml}
+                  </div>
                 </div>
               </details>
-              <button class="btn-primary toggle-add-form">支出を記録</button>
             </div>
             <form class="add-form hidden add-transaction-form" data-edit-id="">
               <div class="add-form-row">
@@ -1170,10 +1184,8 @@
               </div>
             </form>
           </div>
-        `;
-      }).join("");
-
-      container.innerHTML = html;
+        \`;
+      }).join("");      container.innerHTML = html;
     }
 
     function renderAll() {
@@ -1368,7 +1380,10 @@
 
       // 支出追加フォームの開閉
       document.querySelectorAll(".category-card .toggle-add-form").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+          // summary 内にあるボタンの場合、details の開閉が起きないようにする
+          e.stopPropagation();
+          e.preventDefault();
           const card = btn.closest(".category-card");
           const form = card.querySelector(".add-transaction-form");
           form.dataset.editId = "";
