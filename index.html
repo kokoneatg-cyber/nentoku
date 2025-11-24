@@ -121,8 +121,9 @@
       height: 8px;
       border-radius: 999px;
       background: #e5e7eb;
-      margin-top: 4px;
+      margin-top: 0;
       overflow: hidden;
+      flex: 1;
     }
 
     .percent-bar-fill {
@@ -234,6 +235,9 @@
     .category-usage-row {
       font-size: 0.85rem;
       margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .badge-percent {
@@ -248,6 +252,47 @@
     .category-actions {
       margin-top: 8px;
       margin-bottom: 4px;
+    }
+
+    .category-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      gap: 8px;
+    }
+
+    .category-footer-row details {
+      flex: 1;
+    }
+
+    .category-footer-row summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    .cat-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .cat-details summary {
+      position: relative;
+      padding-left: 1.2em;
+    }
+
+    .cat-details summary::before {
+      content: "▶";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 0.9rem;
+      color: #555;
+      transition: transform 0.2s ease;
+    }
+
+    .cat-details[open] summary::before {
+      transform: rotate(90deg);
     }
 
     /* 支出追加フォーム */
@@ -488,7 +533,7 @@
           <button id="import-csv-btn" class="btn-primary">支出CSVインポート</button>
           <button id="reload-btn" class="btn-outline">再読み込み</button>
           <button id="new-year-btn" class="btn-outline">新年度作成</button>
-          <button id="fix-dates-btn" style="margin-top:10px; background:#f88; color:white;">  🔧 日付フォーマット一括修正</button>
+          <button id="fix-dates-btn" class="btn-outline">日付フォーマット一括修正</button>
         </div>
       </div>
     </div>
@@ -567,50 +612,19 @@
       return num.toLocaleString("ja-JP") + "円";
     }
 
-    // ===============================================
-    // Firestore 内の transactions の日付(Y-M-D)を
-    // すべて YYYY-MM-DD に再フォーマットする関数
-    // ===============================================
-    async function fixAllTransactionDates() {
-      const tranRef = collection(db, "transactions");
-      const tranSnap = await getDocs(tranRef);
-
-      const updates = [];
-      const total = tranSnap.size;
-      let count = 0;
-
-      for (const docSnap of tranSnap.docs) {
-        const data = docSnap.data();
-        const oldDate = data.date;
-
-        if (!oldDate) continue;
-
-        const newDate = normalizeDateToIso(oldDate);
-
-        // 日付が変わらないならスキップ
-        if (!newDate || newDate === oldDate) continue;
-
-        console.log(`Updating: ${oldDate} -> ${newDate}`);
-
-        updates.push(updateDoc(docSnap.ref, { date: newDate }));
-        count++;
-      }
-
-      if (updates.length > 0) {
-        await Promise.all(updates);
-      }
-
-      alert(`日付を修正しました：${count} 件 / 全 ${total} 件`);
+    function formatDateForView(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr || "";
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${m}/${day}`;
     }
-
-
     // "2024/8/1" や "2024-8-1" を "2024-08-01" にそろえる
     function normalizeDateToIso(dateStr) {
       if (!dateStr) return "";
       const trimmed = dateStr.trim();
       if (!trimmed) return "";
 
-      // まず「yyyy/..」または「yyyy-..」の形を自前でパース
       const m = trimmed.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
       let d;
       if (m) {
@@ -619,7 +633,6 @@
         const day = parseInt(m[3], 10);
         d = new Date(year, month - 1, day);
       } else {
-        // それ以外は new Date に任せる
         d = new Date(trimmed);
       }
 
@@ -632,16 +645,6 @@
     }
 
 
-    function formatDateForView(dateStr) {
-      const d = new Date(dateStr);
-      if (isNaN(d)) return dateStr || "";
-
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-
-      return `${m}/${day}`;
-    }
-    
     // 4月始まりの年度
     function calcFiscalYear(dateStr) {
       const d = new Date(dateStr);
@@ -704,34 +707,6 @@
       state.currentFiscalYear = years[years.length - 1];
     }
 
-    // その年度のカテゴリ order を 1,2,3,... に整える
-    async function normalizeCategoryOrder(categories) {
-      // 現状の order（null/undefined は 0 扱い）でソート
-      const sorted = [...categories].sort(
-        (a, b) => (a.order ?? 0) - (b.order ?? 0)
-      );
-
-      const updatePromises = [];
-      let changed = false;
-
-      sorted.forEach((cat, idx) => {
-        const newOrder = idx + 1; // 1,2,3,...
-        if (cat.order !== newOrder) {
-          changed = true;
-          cat.order = newOrder; // ローカルの state も更新しておく
-          const ref = doc(db, "categories", cat.id);
-          updatePromises.push(updateDoc(ref, { order: newOrder }));
-        }
-      });
-
-      if (changed) {
-        await Promise.all(updatePromises);
-      }
-
-      return sorted;
-    }
-
-
     async function loadDataForFiscalYear(fiscalYear) {
       const catRef = collection(db, "categories");
       const catQuery = query(
@@ -751,8 +726,6 @@
           fiscalYear: data.fiscalYear
         });
       });
-
-      const normalizedCategories = await normalizeCategoryOrder(categories);
 
       const tranRef = collection(db, "transactions");
       const tranQuery = query(
@@ -775,7 +748,7 @@
         });
       });
 
-      state.categories = normalizedCategories;
+      state.categories = categories;
       state.transactions = transactions;
       renderAll();
     }
@@ -1003,7 +976,6 @@
         const [categoryName, dateCsv, shop, description, amountStr] = cols;
         if (!categoryName || !dateCsv) continue;
 
-        // CSVの日付を "YYYY-MM-DD" に正規化
         const dateIso = normalizeDateToIso(dateCsv);
         if (!dateIso) continue;
 
@@ -1037,12 +1009,39 @@
           fiscalYear
         });
 
-
         importedCount++;
       }
 
       await loadDataForFiscalYear(fiscalYear);
       alert(importedCount + "件の支出をインポートしました。");
+    }
+
+    // Firestore 内の transactions の日付(Y-M-Dなど)を YYYY-MM-DD に再フォーマットする
+    async function fixAllTransactionDates() {
+      const tranRef = collection(db, "transactions");
+      const tranSnap = await getDocs(tranRef);
+
+      const updates = [];
+      const total = tranSnap.size;
+      let count = 0;
+
+      for (const docSnap of tranSnap.docs) {
+        const data = docSnap.data();
+        const oldDate = data.date;
+        if (!oldDate) continue;
+
+        const newDate = normalizeDateToIso(oldDate);
+        if (!newDate || newDate === oldDate) continue;
+
+        updates.push(updateDoc(docSnap.ref, { date: newDate }));
+        count++;
+      }
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      alert(`日付を修正しました：${count} 件 / 全 ${total} 件`);
     }
 
     /* ----------------------------------------
@@ -1141,7 +1140,7 @@
               <span>残高：<span style="color:${usageColor};">${formatYen(remaining)}</span></span>
             </div>
             <div class="category-usage-row">
-              使用率：${percent.toFixed(1)}%
+              <span>使用率：</span>
               <span class="badge-percent" style="background-color:${usageColor}22;color:${usageColor};">
                 ${percent.toFixed(1)}%
               </span>
@@ -1149,7 +1148,13 @@
                 <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%;background-color:${usageColor};"></div>
               </div>
             </div>
-            <div class="category-actions">
+            <div class="category-footer-row">
+              <details class="cat-details">
+                <summary>過去の支出</summary>
+                <div class="transaction-list">
+                  ${transactionsHtml}
+                </div>
+              </details>
               <button class="btn-primary toggle-add-form">支出を記録</button>
             </div>
             <form class="add-form hidden add-transaction-form" data-edit-id="">
@@ -1164,12 +1169,6 @@
                 <button type="submit" class="btn-primary submit-button">保存</button>
               </div>
             </form>
-            <details>
-              <summary>過去の支出</summary>
-              <div class="transaction-list">
-                ${transactionsHtml}
-              </div>
-            </details>
           </div>
         `;
       }).join("");
@@ -1303,7 +1302,6 @@
         }
       });
 
-      // 🔧 日付フォーマット一括修正ボタン
       const fixBtn = document.getElementById("fix-dates-btn");
       if (fixBtn) {
         fixBtn.addEventListener("click", async () => {
