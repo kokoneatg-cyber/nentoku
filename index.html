@@ -635,7 +635,16 @@
     function formatDateForView(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr || "";
-      return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
+
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+
+      // 2桁になるよう、左側をスペースで埋める
+      const mStr = String(m).padStart(2, " ");
+      const dStr = String(day).padStart(2, " ");
+
+      // "mm/dd" 形式（ただし1桁のときは先頭がスペース）
+      return `${mStr}/${dStr}`;
     }
 
     // 4月始まりの年度
