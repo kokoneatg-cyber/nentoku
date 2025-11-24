@@ -636,17 +636,12 @@
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr || "";
 
-      const m = d.getMonth() + 1;
-      const day = d.getDate();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
 
-      // 2桁になるよう、左側をスペースで埋める
-      const mStr = String(m).padStart(2, " ");
-      const dStr = String(day).padStart(2, " ");
-
-      // "mm/dd" 形式（ただし1桁のときは先頭がスペース）
-      return `${mStr}/${dStr}`;
+      return `${m}/${day}`;
     }
-
+    
     // 4月始まりの年度
     function calcFiscalYear(dateStr) {
       const d = new Date(dateStr);
