@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>年間特別費（Firestore版）</title>
+  <title>年間特別費3（Firestore版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -269,7 +269,8 @@
       list-style: none;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+      justify-content: space-between;
     }
 
     .cat-details summary::-webkit-details-marker {
@@ -277,11 +278,12 @@
     }
 
     .cat-details summary::before {
-      content: "▶";
+      content: "?";
       font-size: 0.9rem;
       color: #555;
       display: inline-block;
       width: 1em;
+      margin-right: 2px;
     }
 
     .cat-details[open] summary::before {
@@ -290,9 +292,10 @@
 
     .category-footer-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
+      width: 100%;
     }
 
     .category-footer-header .toggle-add-form {
@@ -353,7 +356,7 @@
     }
 
     details summary::before {
-      content: "▶ ";
+      content: "? ";
       font-size: 0.7rem;
     }
 
@@ -486,14 +489,14 @@
   <div class="app">
     <div class="header-row">
       <h1>年間特別費</h1>
-      <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">☰</button>
+      <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">?</button>
     </div>
 
     <div class="year-row">
       <div class="year-left">
         <select id="fiscal-year-select"></select>
       </div>
-      <span>（4月〜翌年3月）</span>
+      <span>（4月?翌年3月）</span>
     </div>
 
     <div class="card">
@@ -1111,49 +1114,49 @@
                 const dateStr = formatDateForView(t.date);
                 const amountStr = t.amount.toLocaleString("ja-JP") + "円";
                 const shopStr = t.shop || "";
-                return \`
-                  <div class="transaction-item" data-tran-id="\${t.id}" data-category-id="\${cat.id}">
+                return `
+                  <div class="transaction-item" data-tran-id="${t.id}" data-category-id="${cat.id}">
                     <div class="transaction-text">
-                      <span class="tran-date">\${dateStr}</span>
-                      <span class="tran-amount">\${amountStr}</span>
-                      <span class="tran-desc">\${t.description}</span>
-                      <span class="tran-shop">\${shopStr}</span>
+                      <span class="tran-date">${dateStr}</span>
+                      <span class="tran-amount">${amountStr}</span>
+                      <span class="tran-desc">${t.description}</span>
+                      <span class="tran-shop">${shopStr}</span>
                     </div>
                     <div class="transaction-actions">
                       <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
                       <button type="button" class="btn-outline btn-xs delete-transaction">削除</button>
                     </div>
-                  </div>\`;
+                  </div>`;
               }).join("");
 
         const isFirst = index === 0;
         const isLast = index === state.categories.length - 1;
 
-        return \`
-          <div class="category-card" data-category-id="\${cat.id}">
+        return `
+          <div class="category-card" data-category-id="${cat.id}">
             <div class="category-header">
               <div class="category-title-row">
-                <span>● \${cat.name}</span>
+                <span>● ${cat.name}</span>
               </div>
               <div class="category-toolbar">
-                <button type="button" class="btn-outline btn-xs reorder-up" \${isFirst ? "disabled" : ""}>▲</button>
-                <button type="button" class="btn-outline btn-xs reorder-down" \${isLast ? "disabled" : ""}>▼</button>
+                <button type="button" class="btn-outline btn-xs reorder-up" ${isFirst ? "disabled" : ""}>▲</button>
+                <button type="button" class="btn-outline btn-xs reorder-down" ${isLast ? "disabled" : ""}>▼</button>
                 <button type="button" class="btn-outline btn-xs edit-category">編集</button>
                 <button type="button" class="btn-outline btn-xs delete-category">削除</button>
               </div>
             </div>
             <div class="category-numbers">
-              <span>予算：\${formatYen(cat.budget)}</span>
-              <span>使用額：\${formatYen(used)}</span>
-              <span>残高：<span style="color:\${usageColor};">\${formatYen(remaining)}</span></span>
+              <span>予算：${formatYen(cat.budget)}</span>
+              <span>使用額：${formatYen(used)}</span>
+              <span>残高：<span style="color:${usageColor};">${formatYen(remaining)}</span></span>
             </div>
             <div class="category-usage-row">
               <span>使用率：</span>
-              <span class="badge-percent" style="background-color:\${usageColor}22;color:\${usageColor};">
-                \${percent.toFixed(1)}%
+              <span class="badge-percent" style="background-color:${usageColor}22;color:${usageColor};">
+                ${percent.toFixed(1)}%
               </span>
               <div class="percent-bar">
-                <div class="percent-bar-fill" style="width:\${percent.toFixed(1)}%;background-color:\${usageColor};"></div>
+                <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%;background-color:${usageColor};"></div>
               </div>
             </div>
             <div class="category-footer-row">
@@ -1166,7 +1169,7 @@
                 </summary>
                 <div class="category-footer-body">
                   <div class="transaction-list">
-                    \${transactionsHtml}
+                    ${transactionsHtml}
                   </div>
                 </div>
               </details>
@@ -1184,7 +1187,7 @@
               </div>
             </form>
           </div>
-        \`;
+        `;
       }).join("");      container.innerHTML = html;
     }
 
