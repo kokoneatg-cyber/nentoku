@@ -488,6 +488,7 @@
           <button id="import-csv-btn" class="btn-primary">支出CSVインポート</button>
           <button id="reload-btn" class="btn-outline">再読み込み</button>
           <button id="new-year-btn" class="btn-outline">新年度作成</button>
+          <button id="fix-dates-btn" style="margin-top:10px; background:#f88; color:white;">  🔧 日付フォーマット一括修正</button>
         </div>
       </div>
     </div>
@@ -565,6 +566,71 @@
     function formatYen(num) {
       return num.toLocaleString("ja-JP") + "円";
     }
+
+    // ===============================================
+    // Firestore 内の transactions の日付(Y-M-D)を
+    // すべて YYYY-MM-DD に再フォーマットする関数
+    // ===============================================
+    async function fixAllTransactionDates() {
+      const tranRef = collection(db, "transactions");
+      const tranSnap = await getDocs(tranRef);
+
+      const updates = [];
+      const total = tranSnap.size;
+      let count = 0;
+
+      for (const docSnap of tranSnap.docs) {
+        const data = docSnap.data();
+        const oldDate = data.date;
+
+        if (!oldDate) continue;
+
+        const newDate = normalizeDateToIso(oldDate);
+
+        // 日付が変わらないならスキップ
+        if (!newDate || newDate === oldDate) continue;
+
+        console.log(`Updating: ${oldDate} -> ${newDate}`);
+
+        updates.push(updateDoc(docSnap.ref, { date: newDate }));
+        count++;
+      }
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      alert(`日付を修正しました：${count} 件 / 全 ${total} 件`);
+    }
+
+
+    // "2024/8/1" や "2024-8-1" を "2024-08-01" にそろえる
+    function normalizeDateToIso(dateStr) {
+      if (!dateStr) return "";
+      const trimmed = dateStr.trim();
+      if (!trimmed) return "";
+
+      // まず「yyyy/..」または「yyyy-..」の形を自前でパース
+      const m = trimmed.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+      let d;
+      if (m) {
+        const year = parseInt(m[1], 10);
+        const month = parseInt(m[2], 10);
+        const day = parseInt(m[3], 10);
+        d = new Date(year, month - 1, day);
+      } else {
+        // それ以外は new Date に任せる
+        d = new Date(trimmed);
+      }
+
+      if (isNaN(d)) return "";
+
+      const y = d.getFullYear();
+      const m2 = String(d.getMonth() + 1).padStart(2, "0");
+      const d2 = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m2}-${d2}`;
+    }
+
 
     function formatDateForView(dateStr) {
       const d = new Date(dateStr);
@@ -933,10 +999,11 @@
         const [categoryName, dateCsv, shop, description, amountStr] = cols;
         if (!categoryName || !dateCsv) continue;
 
-        const dateNorm = dateCsv.trim().replace(/\//g, "-");
-        if (!dateNorm) continue;
+        // CSVの日付を "YYYY-MM-DD" に正規化
+        const dateIso = normalizeDateToIso(dateCsv);
+        if (!dateIso) continue;
 
-        const fy = calcFiscalYear(dateNorm);
+        const fy = calcFiscalYear(dateIso);
         if (fy !== fiscalYear) continue;
 
         const amount = parseInt(amountStr.replace(/,/g, ""), 10);
@@ -959,12 +1026,13 @@
 
         await addDoc(collection(db, "transactions"), {
           categoryId: catId,
-          date: dateNorm,
+          date: dateIso,
           shop: shop || "",
           description: description || "",
           amount,
           fiscalYear
         });
+
 
         importedCount++;
       }
@@ -1230,6 +1298,18 @@
           alert("新年度データ作成中にエラーが発生しました。");
         }
       });
+
+      // 🔧 日付フォーマット一括修正ボタン
+      const fixBtn = document.getElementById("fix-dates-btn");
+      if (fixBtn) {
+        fixBtn.addEventListener("click", async () => {
+          if (!confirm("Firestore 内の全支出データの日付を YYYY-MM-DD に統一します。よろしいですか？")) {
+            return;
+          }
+          await fixAllTransactionDates();
+          alert("完了しました。ページを再読み込みしてください。");
+        });
+      }
     }
 
     function attachCategoryAndTransactionEvents() {
