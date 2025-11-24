@@ -370,44 +370,71 @@
       padding-top: 4px;
     }
 
-    .transaction-item {
-      display: flex;                     /* 1行で横並び */
-      align-items: center;
-      justify-content: space-between;
-      padding: 2px 0;
-      border-bottom: 1px dashed #e5e7eb;
-      gap: 6px;
-    }
+/* 過去の支出 1行全体 */
+.transaction-item {
+  padding: 2px 0;
+  border-bottom: 1px dashed #e5e7eb;
+  font-size: 0.8rem;
+}
 
-    .transaction-text {
-      flex: 1;
-      min-width: 0;
-      display: grid;
-      grid-template-columns: 80px 80px 1fr 90px; /* 日付 / 金額 / 内容 / 店舗 */
-      column-gap: 8px;
-      font-size: 0.8rem;
-      font-variant-numeric: tabular-nums;
-      align-items: center;
-    }
+/* テキスト部分をフレックス1行に */
+.transaction-text {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;              /* 子要素の省略を許可 */
+  font-variant-numeric: tabular-nums;
+}
 
-    .transaction-text span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;               /* 1行表示 */
-      text-align: left;
-    }
+/* 共通：1行で省略表示 */
+.transaction-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-    .transaction-actions {
-      flex-shrink: 0;
-      display: flex;
-      gap: 4px;
-    }
+/* 日付：最大5文字＋前後スペース ≒ 7ch */
+.tran-date {
+  flex: 0 0 7ch;
+}
 
-    .transaction-empty {
-      color: #9ca3af;
-      font-style: italic;
-      padding: 4px 0;
-    }
+/* 金額：最大「100,000円」くらいを想定、右詰め */
+.tran-amount {
+  flex: 0 0 9ch;
+  text-align: right;
+}
+
+/* 内容：残りのスペース全部 */
+.tran-desc {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 店舗：全角5文字ぶん。長いときは省略 */
+.tran-shop {
+  flex: 0 0 5em;
+}
+
+/* 編集／削除ボタン部分はそのままでOK */
+.transaction-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.transaction-empty {
+  color: #9ca3af;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* iPhone など横幅が狭い場合は 店舗カラムを非表示にする */
+@media (max-width: 480px) {
+  .tran-shop {
+    display: none;
+  }
+}
 
     /* モーダル共通 */
 
