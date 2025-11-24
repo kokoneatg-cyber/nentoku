@@ -1073,106 +1073,127 @@
       el.classList.add("hidden");
     }
 
-    function attachGlobalEvents() {
-      const yearSelect = document.getElementById("fiscal-year-select");
-      yearSelect.addEventListener("change", async () => {
-        const y = parseInt(yearSelect.value, 10);
-        if (!isNaN(y)) {
-          state.currentFiscalYear = y;
-          await loadDataForFiscalYear(y);
-        }
-      });
-
-      // メニュー モーダル
-      const menuDialog = document.getElementById("menu-dialog");
-      document.getElementById("menu-btn").addEventListener("click", () => openModal(menuDialog));
-      document.getElementById("close-menu-btn").addEventListener("click", () => closeModal(menuDialog));
-      menuDialog.addEventListener("click", (e) => {
-        if (e.target === menuDialog) closeModal(menuDialog);
-      });
-
-      // 費目追加モーダル
-      const categoryDialog = document.getElementById("category-dialog");
-      document.getElementById("open-add-category-dialog")
-        .addEventListener("click", () => openModal(categoryDialog));
-      document.getElementById("cancel-add-category")
-        .addEventListener("click", () => closeModal(categoryDialog));
-      categoryDialog.addEventListener("click", (e) => {
-        if (e.target === categoryDialog) closeModal(categoryDialog);
-      });
-
-      // 費目追加フォーム
-      const addCatForm = document.getElementById("add-category-form");
-      addCatForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const nameInput = document.getElementById("new-category-name");
-        const budgetInput = document.getElementById("new-category-budget");
-        const name = nameInput.value.trim();
-        const budgetVal = parseInt(budgetInput.value, 10);
-        if (!name) {
-          alert("費目名を入力してください。");
-          return;
-        }
-        if (isNaN(budgetVal) || budgetVal < 0) {
-          alert("予算額は0以上の数値で入力してください。");
-          return;
-        }
-        await addCategory(name, budgetVal);
-        nameInput.value = "";
-        budgetInput.value = "";
-        closeModal(categoryDialog);
-      });
-
-      // CSVエクスポート
-      document.getElementById("export-csv-btn").addEventListener("click", () => {
-        if (!state.currentFiscalYear) {
-          alert("年度が選択されていません。");
-          return;
-        }
-        const csv = buildTransactionsCsvForCurrentYear();
-        const filename = `transactions_${state.currentFiscalYear}.csv`;
-        downloadBlob(csv, filename);
-      });
-
-      // CSVインポート
-      const csvInput = document.getElementById("csv-file-input");
-      document.getElementById("import-csv-btn").addEventListener("click", () => {
-        csvInput.value = "";
-        csvInput.click();
-      });
-      csvInput.addEventListener("change", () => {
-        const file = csvInput.files && csvInput.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const text = e.target.result;
-          try {
-            await importTransactionsFromCsvText(String(text));
-          } catch (err) {
-            console.error(err);
-            alert("CSVインポート中にエラーが発生しました。");
-          }
-        };
-        reader.readAsText(file, "utf-8");
-      });
-
-      // 再読み込み
-      document.getElementById("reload-btn").addEventListener("click", async () => {
-        if (state.currentFiscalYear != null) {
-          await loadDataForFiscalYear(state.currentFiscalYear);
-        }
-      });
-
-      // 新年度作成
-      document.getElementById("new-year-btn").addEventListener("click", async () => {
-        try {
-          await createNextFiscalYearFromLast();
-        } catch (e) {
-          console.error(e);
-          alert("新年度データ作成中にエラーが発生しました。");
-        }
-      });
+function attachGlobalEvents() {
+  const yearSelect = document.getElementById("fiscal-year-select");
+  yearSelect.addEventListener("change", async () => {
+    const y = parseInt(yearSelect.value, 10);
+    if (!isNaN(y)) {
+      state.currentFiscalYear = y;
+      await loadDataForFiscalYear(y);
     }
+  });
+
+  // ▼▼ メニュー（ハンバーガー）モーダル ▼▼
+  const menuDialog = document.getElementById("menu-dialog");
+  const menuBtn = document.getElementById("menu-btn");
+  const closeMenuBtn = document.getElementById("close-menu-btn");
+
+  menuBtn.addEventListener("click", () => openModal(menuDialog));
+  closeMenuBtn.addEventListener("click", () => closeModal(menuDialog));
+
+  // 黒い背景を押したら閉じる
+  menuDialog.addEventListener("click", (e) => {
+    if (e.target === menuDialog) {
+      closeModal(menuDialog);
+    }
+  });
+
+  // ▼▼ 費目追加モーダル ▼▼
+  const categoryDialog = document.getElementById("category-dialog");
+  const openAddCategoryDialogBtn = document.getElementById("open-add-category-dialog");
+  const cancelAddCategoryBtn = document.getElementById("cancel-add-category");
+  const addCatForm = document.getElementById("add-category-form");
+
+  // 「費目を追加」ボタンで開く
+  openAddCategoryDialogBtn.addEventListener("click", () => {
+    categoryDialog.classList.remove("hidden");
+  });
+
+  // キャンセルで閉じる
+  cancelAddCategoryBtn.addEventListener("click", () => {
+    addCatForm.reset();
+    closeModal(categoryDialog);
+  });
+
+  // 背景タップで閉じる
+  categoryDialog.addEventListener("click", (e) => {
+    if (e.target === categoryDialog) {
+      addCatForm.reset();
+      closeModal(categoryDialog);
+    }
+  });
+
+  // 送信（追加）時：Firestore に登録してから閉じる
+  addCatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById("new-category-name");
+    const budgetInput = document.getElementById("new-category-budget");
+    const name = nameInput.value.trim();
+    const budgetVal = parseInt(budgetInput.value, 10);
+
+    if (!name) {
+      alert("費目名を入力してください。");
+      return;
+    }
+    if (isNaN(budgetVal) || budgetVal < 0) {
+      alert("予算額は0以上の数値で入力してください。");
+      return;
+    }
+
+    await addCategory(name, budgetVal);
+    addCatForm.reset();
+    closeModal(categoryDialog);
+  });
+
+  // ▼▼ ここから下は CSV／再読み込み／新年度作成など ▼▼
+  const csvInput = document.getElementById("csv-file-input");
+
+  document.getElementById("export-csv-btn").addEventListener("click", () => {
+    if (!state.currentFiscalYear) {
+      alert("年度が選択されていません。");
+      return;
+    }
+    const csv = buildTransactionsCsvForCurrentYear();
+    const filename = `transactions_${state.currentFiscalYear}.csv`;
+    downloadBlob(csv, filename);
+  });
+
+  document.getElementById("import-csv-btn").addEventListener("click", () => {
+    csvInput.value = "";
+    csvInput.click();
+  });
+
+  csvInput.addEventListener("change", () => {
+    const file = csvInput.files && csvInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target.result;
+      try {
+        await importTransactionsFromCsvText(String(text));
+      } catch (err) {
+        console.error(err);
+        alert("CSVインポート中にエラーが発生しました。");
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  });
+
+  document.getElementById("reload-btn").addEventListener("click", async () => {
+    if (state.currentFiscalYear != null) {
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+  });
+
+  document.getElementById("new-year-btn").addEventListener("click", async () => {
+    try {
+      await createNextFiscalYearFromLast();
+    } catch (e) {
+      console.error(e);
+      alert("新年度データ作成中にエラーが発生しました。");
+    }
+  });
+}
 
     function attachCategoryAndTransactionEvents() {
       // 費目編集
