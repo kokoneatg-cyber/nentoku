@@ -634,6 +634,34 @@
       state.currentFiscalYear = years[years.length - 1];
     }
 
+    // その年度のカテゴリ order を 1,2,3,... に整える
+    async function normalizeCategoryOrder(categories) {
+      // 現状の order（null/undefined は 0 扱い）でソート
+      const sorted = [...categories].sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0)
+      );
+
+      const updatePromises = [];
+      let changed = false;
+
+      sorted.forEach((cat, idx) => {
+        const newOrder = idx + 1; // 1,2,3,...
+        if (cat.order !== newOrder) {
+          changed = true;
+          cat.order = newOrder; // ローカルの state も更新しておく
+          const ref = doc(db, "categories", cat.id);
+          updatePromises.push(updateDoc(ref, { order: newOrder }));
+        }
+      });
+
+      if (changed) {
+        await Promise.all(updatePromises);
+      }
+
+      return sorted;
+    }
+
+
     async function loadDataForFiscalYear(fiscalYear) {
       const catRef = collection(db, "categories");
       const catQuery = query(
