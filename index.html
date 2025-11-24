@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>年間特別費（Firestore版）</title>
+  <title>年間特別費2（Firestore版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -117,12 +117,13 @@
 
     .percent-bar {
       position: relative;
-      flex: 1;
+      width: 100%;
       height: 8px;
       border-radius: 999px;
       background: #e5e7eb;
-      margin-top: 0; /* ここを 0 にするのがポイント */
+      margin-top: 0;
       overflow: hidden;
+      flex: 1;
     }
 
     .percent-bar-fill {
@@ -253,6 +254,55 @@
       margin-bottom: 4px;
     }
 
+    .category-footer-row {
+      margin-top: 8px;
+    }
+
+    .cat-details {
+      display: block;
+    }
+
+    .cat-details summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cat-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .cat-details summary::before {
+      content: "?";
+      font-size: 0.9rem;
+      color: #555;
+      display: inline-block;
+      width: 1em;
+    }
+
+    .cat-details[open] summary::before {
+      content: "▼";
+    }
+
+    .category-footer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-footer-header .toggle-add-form {
+      white-space: nowrap;
+    }
+
+    .category-footer-body {
+      margin-top: 4px;
+    }
+
     /* 支出追加フォーム */
 
     .add-form {
@@ -303,7 +353,7 @@
     }
 
     details summary::before {
-      content: "▶ ";
+      content: "? ";
       font-size: 0.7rem;
     }
 
@@ -436,14 +486,14 @@
   <div class="app">
     <div class="header-row">
       <h1>年間特別費</h1>
-      <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">☰</button>
+      <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">?</button>
     </div>
 
     <div class="year-row">
       <div class="year-left">
         <select id="fiscal-year-select"></select>
       </div>
-      <span>（4月〜翌年3月）</span>
+      <span>（4月?翌年3月）</span>
     </div>
 
     <div class="card">
@@ -491,7 +541,7 @@
           <button id="import-csv-btn" class="btn-primary">支出CSVインポート</button>
           <button id="reload-btn" class="btn-outline">再読み込み</button>
           <button id="new-year-btn" class="btn-outline">新年度作成</button>
-          <button id="fix-dates-btn" style="margin-top:10px; background:#f88; color:white;">  🔧 日付フォーマット一括修正</button>
+          <button id="fix-dates-btn" class="btn-outline">日付フォーマット一括修正</button>
         </div>
       </div>
     </div>
@@ -570,50 +620,19 @@
       return num.toLocaleString("ja-JP") + "円";
     }
 
-    // ===============================================
-    // Firestore 内の transactions の日付(Y-M-D)を
-    // すべて YYYY-MM-DD に再フォーマットする関数
-    // ===============================================
-    async function fixAllTransactionDates() {
-      const tranRef = collection(db, "transactions");
-      const tranSnap = await getDocs(tranRef);
-
-      const updates = [];
-      const total = tranSnap.size;
-      let count = 0;
-
-      for (const docSnap of tranSnap.docs) {
-        const data = docSnap.data();
-        const oldDate = data.date;
-
-        if (!oldDate) continue;
-
-        const newDate = normalizeDateToIso(oldDate);
-
-        // 日付が変わらないならスキップ
-        if (!newDate || newDate === oldDate) continue;
-
-        console.log(`Updating: ${oldDate} -> ${newDate}`);
-
-        updates.push(updateDoc(docSnap.ref, { date: newDate }));
-        count++;
-      }
-
-      if (updates.length > 0) {
-        await Promise.all(updates);
-      }
-
-      alert(`日付を修正しました：${count} 件 / 全 ${total} 件`);
+    function formatDateForView(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr || "";
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${m}/${day}`;
     }
-
-
     // "2024/8/1" や "2024-8-1" を "2024-08-01" にそろえる
     function normalizeDateToIso(dateStr) {
       if (!dateStr) return "";
       const trimmed = dateStr.trim();
       if (!trimmed) return "";
 
-      // まず「yyyy/..」または「yyyy-..」の形を自前でパース
       const m = trimmed.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
       let d;
       if (m) {
@@ -622,7 +641,6 @@
         const day = parseInt(m[3], 10);
         d = new Date(year, month - 1, day);
       } else {
-        // それ以外は new Date に任せる
         d = new Date(trimmed);
       }
 
@@ -634,16 +652,6 @@
       return `${y}-${m2}-${d2}`;
     }
 
-
-    function formatDateForView(dateStr) {
-      const d = new Date(dateStr);
-      if (isNaN(d)) return dateStr || "";
-
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-
-      return `${m}/${day}`;
-    }
 
     // 4月始まりの年度
     function calcFiscalYear(dateStr) {
@@ -707,34 +715,6 @@
       state.currentFiscalYear = years[years.length - 1];
     }
 
-    // その年度のカテゴリ order を 1,2,3,... に整える
-    async function normalizeCategoryOrder(categories) {
-      // 現状の order（null/undefined は 0 扱い）でソート
-      const sorted = [...categories].sort(
-        (a, b) => (a.order ?? 0) - (b.order ?? 0)
-      );
-
-      const updatePromises = [];
-      let changed = false;
-
-      sorted.forEach((cat, idx) => {
-        const newOrder = idx + 1; // 1,2,3,...
-        if (cat.order !== newOrder) {
-          changed = true;
-          cat.order = newOrder; // ローカルの state も更新しておく
-          const ref = doc(db, "categories", cat.id);
-          updatePromises.push(updateDoc(ref, { order: newOrder }));
-        }
-      });
-
-      if (changed) {
-        await Promise.all(updatePromises);
-      }
-
-      return sorted;
-    }
-
-
     async function loadDataForFiscalYear(fiscalYear) {
       const catRef = collection(db, "categories");
       const catQuery = query(
@@ -754,8 +734,6 @@
           fiscalYear: data.fiscalYear
         });
       });
-
-      const normalizedCategories = await normalizeCategoryOrder(categories);
 
       const tranRef = collection(db, "transactions");
       const tranQuery = query(
@@ -778,7 +756,7 @@
         });
       });
 
-      state.categories = normalizedCategories;
+      state.categories = categories;
       state.transactions = transactions;
       renderAll();
     }
@@ -1006,7 +984,6 @@
         const [categoryName, dateCsv, shop, description, amountStr] = cols;
         if (!categoryName || !dateCsv) continue;
 
-        // CSVの日付を "YYYY-MM-DD" に正規化
         const dateIso = normalizeDateToIso(dateCsv);
         if (!dateIso) continue;
 
@@ -1040,12 +1017,39 @@
           fiscalYear
         });
 
-
         importedCount++;
       }
 
       await loadDataForFiscalYear(fiscalYear);
       alert(importedCount + "件の支出をインポートしました。");
+    }
+
+    // Firestore 内の transactions の日付(Y-M-Dなど)を YYYY-MM-DD に再フォーマットする
+    async function fixAllTransactionDates() {
+      const tranRef = collection(db, "transactions");
+      const tranSnap = await getDocs(tranRef);
+
+      const updates = [];
+      const total = tranSnap.size;
+      let count = 0;
+
+      for (const docSnap of tranSnap.docs) {
+        const data = docSnap.data();
+        const oldDate = data.date;
+        if (!oldDate) continue;
+
+        const newDate = normalizeDateToIso(oldDate);
+        if (!newDate || newDate === oldDate) continue;
+
+        updates.push(updateDoc(docSnap.ref, { date: newDate }));
+        count++;
+      }
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      alert(`日付を修正しました：${count} 件 / 全 ${total} 件`);
     }
 
     /* ----------------------------------------
@@ -1107,53 +1111,65 @@
                 const dateStr = formatDateForView(t.date);
                 const amountStr = t.amount.toLocaleString("ja-JP") + "円";
                 const shopStr = t.shop || "";
-                return `
-                  <div class="transaction-item" data-tran-id="${t.id}" data-category-id="${cat.id}">
+                return \`
+                  <div class="transaction-item" data-tran-id="\${t.id}" data-category-id="\${cat.id}">
                     <div class="transaction-text">
-                      <span class="tran-date">${dateStr}</span>
-                      <span class="tran-amount">${amountStr}</span>
-                      <span class="tran-desc">${t.description}</span>
-                      <span class="tran-shop">${shopStr}</span>
+                      <span class="tran-date">\${dateStr}</span>
+                      <span class="tran-amount">\${amountStr}</span>
+                      <span class="tran-desc">\${t.description}</span>
+                      <span class="tran-shop">\${shopStr}</span>
                     </div>
                     <div class="transaction-actions">
                       <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
                       <button type="button" class="btn-outline btn-xs delete-transaction">削除</button>
                     </div>
-                  </div>`;
+                  </div>\`;
               }).join("");
 
         const isFirst = index === 0;
         const isLast = index === state.categories.length - 1;
 
-        return `
-          <div class="category-card" data-category-id="${cat.id}">
+        return \`
+          <div class="category-card" data-category-id="\${cat.id}">
             <div class="category-header">
               <div class="category-title-row">
-                <span>● ${cat.name}</span>
+                <span>● \${cat.name}</span>
               </div>
               <div class="category-toolbar">
-                <button type="button" class="btn-outline btn-xs reorder-up" ${isFirst ? "disabled" : ""}>▲</button>
-                <button type="button" class="btn-outline btn-xs reorder-down" ${isLast ? "disabled" : ""}>▼</button>
+                <button type="button" class="btn-outline btn-xs reorder-up" \${isFirst ? "disabled" : ""}>▲</button>
+                <button type="button" class="btn-outline btn-xs reorder-down" \${isLast ? "disabled" : ""}>▼</button>
                 <button type="button" class="btn-outline btn-xs edit-category">編集</button>
                 <button type="button" class="btn-outline btn-xs delete-category">削除</button>
               </div>
             </div>
             <div class="category-numbers">
-              <span>予算：${formatYen(cat.budget)}</span>
-              <span>使用額：${formatYen(used)}</span>
-              <span>残高：<span style="color:${usageColor};">${formatYen(remaining)}</span></span>
+              <span>予算：\${formatYen(cat.budget)}</span>
+              <span>使用額：\${formatYen(used)}</span>
+              <span>残高：<span style="color:\${usageColor};">\${formatYen(remaining)}</span></span>
             </div>
             <div class="category-usage-row">
-              使用率：${percent.toFixed(1)}%
-              <span class="badge-percent" style="background-color:${usageColor}22;color:${usageColor};">
-                ${percent.toFixed(1)}%
+              <span>使用率：</span>
+              <span class="badge-percent" style="background-color:\${usageColor}22;color:\${usageColor};">
+                \${percent.toFixed(1)}%
               </span>
               <div class="percent-bar">
-                <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%;background-color:${usageColor};"></div>
+                <div class="percent-bar-fill" style="width:\${percent.toFixed(1)}%;background-color:\${usageColor};"></div>
               </div>
             </div>
-            <div class="category-actions">
-              <button class="btn-primary toggle-add-form">支出を記録</button>
+            <div class="category-footer-row">
+              <details class="cat-details">
+                <summary>
+                  <div class="category-footer-header">
+                    <span>過去の支出</span>
+                    <button class="btn-primary toggle-add-form" type="button">支出を記録</button>
+                  </div>
+                </summary>
+                <div class="category-footer-body">
+                  <div class="transaction-list">
+                    \${transactionsHtml}
+                  </div>
+                </div>
+              </details>
             </div>
             <form class="add-form hidden add-transaction-form" data-edit-id="">
               <div class="add-form-row">
@@ -1167,17 +1183,9 @@
                 <button type="submit" class="btn-primary submit-button">保存</button>
               </div>
             </form>
-            <details>
-              <summary>過去の支出</summary>
-              <div class="transaction-list">
-                ${transactionsHtml}
-              </div>
-            </details>
           </div>
-        `;
-      }).join("");
-
-      container.innerHTML = html;
+        \`;
+      }).join("");      container.innerHTML = html;
     }
 
     function renderAll() {
@@ -1306,7 +1314,6 @@
         }
       });
 
-      // 🔧 日付フォーマット一括修正ボタン
       const fixBtn = document.getElementById("fix-dates-btn");
       if (fixBtn) {
         fixBtn.addEventListener("click", async () => {
@@ -1373,7 +1380,10 @@
 
       // 支出追加フォームの開閉
       document.querySelectorAll(".category-card .toggle-add-form").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+          // summary 内にあるボタンの場合、details の開閉が起きないようにする
+          e.stopPropagation();
+          e.preventDefault();
           const card = btn.closest(".category-card");
           const form = card.querySelector(".add-transaction-form");
           form.dataset.editId = "";
