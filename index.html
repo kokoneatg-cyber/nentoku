@@ -682,6 +682,8 @@
         });
       });
 
+      const normalizedCategories = await normalizeCategoryOrder(categories);
+
       const tranRef = collection(db, "transactions");
       const tranQuery = query(
         tranRef,
@@ -703,7 +705,7 @@
         });
       });
 
-      state.categories = categories;
+      state.categories = normalizedCategories;
       state.transactions = transactions;
       renderAll();
     }
