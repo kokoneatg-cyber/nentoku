@@ -28,13 +28,26 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       margin-bottom: 8px;
     }
 
     h1 {
       font-size: 1.5rem;
       margin: 0;
+      flex: 1;
+    }
+
+    .menu-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      padding: 0;
+      flex-shrink: 0;
     }
 
     .year-row {
@@ -43,9 +56,10 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-bottom: 12px;
+      font-size: 0.9rem;
     }
 
-    select {
+    .year-row select {
       padding: 4px 8px;
       border-radius: 999px;
       border: 1px solid #d1d5db;
@@ -53,7 +67,7 @@
       background: #ffffff;
     }
 
-    .top-actions {
+    .btn-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
@@ -85,9 +99,13 @@
       font-size: 1.1rem;
     }
 
-    .summary-item-percent {
+    .summary-usage-row {
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+
+    .summary-usage-row span {
       font-weight: 600;
-      font-size: 1.1rem;
     }
 
     .percent-bar {
@@ -110,12 +128,19 @@
       transition: width 0.3s ease;
     }
 
+    .section-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 16px 0 8px;
+    }
+
     .section-title {
       font-size: 1.1rem;
       font-weight: 600;
       border-left: 4px solid #3b82f6;
       padding-left: 8px;
-      margin: 16px 0 8px;
     }
 
     .category-card {
@@ -149,20 +174,20 @@
       white-space: nowrap;
     }
 
+    .category-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
     .category-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       margin-top: 8px;
       margin-bottom: 4px;
-    }
-
-    .category-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
     }
 
     button {
@@ -192,20 +217,6 @@
 
     button:active {
       transform: translateY(1px);
-    }
-
-    .add-category-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .add-category-form input {
-      padding: 4px 8px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 0.85rem;
     }
 
     .add-form {
@@ -280,7 +291,7 @@
       flex: 1;
       min-width: 0;
       display: grid;
-      grid-template-columns: 70px 90px 1fr 120px; /* 日付 / 金額 / 内容 / 店舗 */
+      grid-template-columns: 70px 90px 1fr 120px;
       column-gap: 8px;
       font-size: 0.85rem;
       font-variant-numeric: tabular-nums;
@@ -310,22 +321,66 @@
       margin-left: 4px;
     }
 
-    .badge-warning {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .badge-danger {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    .text-danger {
-      color: #b91c1c;
-    }
-
     .hidden {
       display: none;
+    }
+
+    /* モーダル */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px 18px 14px;
+      width: 92%;
+      max-width: 420px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .modal-actions-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .modal-actions-vertical button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .modal-note {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 4px;
     }
 
     @media (max-width: 640px) {
@@ -351,9 +406,6 @@
         grid-auto-rows: auto;
         row-gap: 2px;
       }
-      .add-category-form {
-        flex-direction: column;
-      }
     }
   </style>
 </head>
@@ -361,17 +413,12 @@
   <div class="app">
     <div class="header-row">
       <h1>年間特別費</h1>
-      <div class="top-actions">
-        <button id="export-csv-btn" class="btn-outline">支出CSVダウンロード</button>
-        <button id="import-csv-btn" class="btn-primary">支出CSVインポート</button>
-      </div>
+      <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">☰</button>
     </div>
 
     <div class="year-row">
-      <label for="fiscal-year-select">年度（4月〜翌年3月）：</label>
       <select id="fiscal-year-select"></select>
-      <button id="reload-btn" class="btn-outline btn-xs">再読み込み</button>
-      <button id="new-year-btn" class="btn-primary btn-xs">新年度作成</button>
+      <span>（4月〜翌年3月）</span>
     </div>
 
     <div class="card">
@@ -381,29 +428,25 @@
           <div class="summary-item-value" id="total-budget">0円</div>
         </div>
         <div>
+          <div class="summary-item-label">使用額</div>
+          <div class="summary-item-value" id="total-used">0円</div>
+        </div>
+        <div>
           <div class="summary-item-label">残高</div>
           <div class="summary-item-value" id="total-remaining">0円</div>
         </div>
-        <div>
-          <div class="summary-item-label">使用率</div>
-          <div class="summary-item-percent" id="total-percent">0%</div>
-          <div class="percent-bar">
-            <div class="percent-bar-fill" id="total-percent-bar"></div>
-          </div>
+      </div>
+      <div class="summary-usage-row">
+        使用率：<span id="total-percent">0%</span>
+        <div class="percent-bar">
+          <div class="percent-bar-fill" id="total-percent-bar"></div>
         </div>
       </div>
     </div>
 
-    <div class="section-title">費目</div>
-    <div class="card">
-      <form id="add-category-form" class="add-category-form">
-        <input type="text" id="new-category-name" placeholder="費目名（例：洋服）" required />
-        <input type="number" id="new-category-budget" placeholder="予算額" min="0" required />
-        <button type="submit" class="btn-primary">費目を追加</button>
-      </form>
-      <div id="categories-tools-note" style="font-size:0.8rem;color:#6b7280;margin-bottom:4px;">
-        費目名・予算額はあとから編集／削除できます。
-      </div>
+    <div class="section-header-row">
+      <div class="section-title">費目</div>
+      <button id="open-add-category-dialog" class="btn-primary btn-xs">費目を追加</button>
     </div>
 
     <div id="categories-container">
@@ -412,11 +455,51 @@
 
     <!-- CSVインポート用ファイル入力（非表示） -->
     <input type="file" id="csv-file-input" accept=".csv,text/tab-separated-values,text/plain" class="hidden" />
+
+    <!-- メニューモーダル -->
+    <div id="menu-dialog" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">メニュー</div>
+          <button id="close-menu-btn" class="btn-outline btn-xs">閉じる</button>
+        </div>
+        <div class="modal-actions-vertical">
+          <button id="export-csv-btn" class="btn-outline">支出CSVダウンロード</button>
+          <button id="import-csv-btn" class="btn-primary">支出CSVインポート</button>
+          <button id="reload-btn" class="btn-outline">再読み込み</button>
+          <button id="new-year-btn" class="btn-outline">新年度作成</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 費目追加モーダル -->
+    <div id="category-dialog" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">費目を追加</div>
+        </div>
+        <form id="add-category-form">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input type="text" id="new-category-name" placeholder="費目名（例：洋服）" required
+                   style="padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            <input type="number" id="new-category-budget" placeholder="予算額" min="0" required
+                   style="padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-add-category" class="btn-outline">キャンセル</button>
+            <button type="submit" class="btn-primary">費目を追加</button>
+          </div>
+          <div class="modal-note">
+            費目名・予算額はあとから編集／削除できます。
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script type="module">
     // ==========================
-    // Firebase 初期化（v12.6.0 CDN）
+    // Firebase 初期化（v12.6.0）
     // ==========================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import {
@@ -452,8 +535,8 @@
     const state = {
       fiscalYears: [],
       currentFiscalYear: null,
-      categories: [],   // [{id, name, budget, order, fiscalYear}]
-      transactions: []  // [{id, categoryId, date, shop, description, amount, fiscalYear}]
+      categories: [],
+      transactions: []
     };
 
     // ==========================
@@ -466,10 +549,10 @@
     function formatDateForView(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr || "";
-      return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" }); // 5/5
+      return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
     }
 
-    // 4月始まりの年度を計算
+    // 4月始まりの年度
     function calcFiscalYear(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return null;
@@ -497,13 +580,7 @@
       });
       const totalRemaining = totalBudget - totalUsed;
       const percent = totalBudget > 0 ? Math.min(100, (totalUsed / totalBudget) * 100) : 0;
-      return { totalBudget, totalRemaining, percent };
-    }
-
-    function getPercentBadgeClass(percent) {
-      if (percent >= 100) return "badge-percent badge-danger";
-      if (percent >= 80) return "badge-percent badge-warning";
-      return "badge-percent";
+      return { totalBudget, totalUsed, totalRemaining, percent };
     }
 
     function getNowFiscalYear() {
@@ -511,6 +588,13 @@
       const y = today.getFullYear();
       const m = today.getMonth() + 1;
       return m >= 4 ? y : y - 1;
+    }
+
+    // 使用率に応じた色
+    function getUsageColor(percent) {
+      if (percent >= 90) return "#f31f6f";   // 赤
+      if (percent >= 70) return "#e9a02f";   // 黄
+      return "#70a3f3";                      // 青
     }
 
     // ==========================
@@ -521,13 +605,10 @@
       const yearsSet = new Set();
       snap.forEach((docSnap) => {
         const data = docSnap.data();
-        if (typeof data.fiscalYear === "number") {
-          yearsSet.add(data.fiscalYear);
-        }
+        if (typeof data.fiscalYear === "number") yearsSet.add(data.fiscalYear);
       });
       let years = Array.from(yearsSet);
       if (years.length === 0) {
-        // データがまだない場合は現在の年度だけ用意
         years = [getNowFiscalYear()];
       }
       years.sort((a, b) => a - b);
@@ -536,7 +617,6 @@
     }
 
     async function loadDataForFiscalYear(fiscalYear) {
-      // --- 費目 ---
       const catRef = collection(db, "categories");
       const catQuery = query(
         catRef,
@@ -556,7 +636,6 @@
         });
       });
 
-      // --- 支出 ---
       const tranRef = collection(db, "transactions");
       const tranQuery = query(
         tranRef,
@@ -584,7 +663,7 @@
     }
 
     // ==========================
-    // Firestore 書き込み系
+    // Firestore 書き込み
     // ==========================
     async function addCategory(name, budget) {
       const fiscalYear = state.currentFiscalYear;
@@ -602,10 +681,7 @@
 
     async function updateCategory(catId, newName, newBudget) {
       const ref = doc(db, "categories", catId);
-      await updateDoc(ref, {
-        name: newName,
-        budget: newBudget
-      });
+      await updateDoc(ref, { name: newName, budget: newBudget });
       await loadDataForFiscalYear(state.currentFiscalYear);
     }
 
@@ -613,7 +689,6 @@
       const ok = confirm("この費目と、その費目に紐づくすべての支出を削除します。よろしいですか？");
       if (!ok) return;
 
-      // 支出の削除
       const tranRef = collection(db, "transactions");
       const tranQuery = query(tranRef, where("categoryId", "==", catId));
       const tranSnap = await getDocs(tranQuery);
@@ -623,8 +698,27 @@
       });
       await Promise.all(deletePromises);
 
-      // 費目の削除
       await deleteDoc(doc(db, "categories", catId));
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+
+    async function moveCategory(catId, direction) {
+      const idx = state.categories.findIndex((c) => c.id === catId);
+      if (idx === -1) return;
+      const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= state.categories.length) return;
+
+      const current = state.categories[idx];
+      const other = state.categories[targetIdx];
+
+      const ref1 = doc(db, "categories", current.id);
+      const ref2 = doc(db, "categories", other.id);
+
+      await Promise.all([
+        updateDoc(ref1, { order: other.order }),
+        updateDoc(ref2, { order: current.order })
+      ]);
+
       await loadDataForFiscalYear(state.currentFiscalYear);
     }
 
@@ -671,9 +765,6 @@
       await loadDataForFiscalYear(state.currentFiscalYear);
     }
 
-    // ==========================
-    // 新年度作成：最新年度の費目をコピー
-    // ==========================
     async function createNextFiscalYearFromLast() {
       if (!state.fiscalYears || state.fiscalYears.length === 0) {
         alert("まだ年度データがありません。先に現在の年度の費目を追加してください。");
@@ -683,9 +774,7 @@
       const lastYear = Math.max(...state.fiscalYears);
       const newYear = lastYear + 1;
 
-      const ok = confirm(
-        `${lastYear}年度の費目をコピーして、${newYear}年度のデータを作成します。よろしいですか？`
-      );
+      const ok = confirm(`${lastYear}年度の費目をコピーして、${newYear}年度のデータを作成します。よろしいですか？`);
       if (!ok) return;
 
       const catRef = collection(db, "categories");
@@ -729,8 +818,7 @@
     }
 
     // ==========================
-    // CSV エクスポート（タブ区切り）
-    // 日付は "YYYY/MM/DD"
+    // CSV エクスポート
     // ==========================
     function buildTransactionsCsvForCurrentYear() {
       const header = ["費目", "日付", "店舗", "内容", "金額"];
@@ -769,9 +857,6 @@
 
     // ==========================
     // CSV インポート
-    // フォーマット：タブ区切り
-    // 1行目：費目<TAB>日付<TAB>店舗<TAB>内容<TAB>金額
-    // 日付は "YYYY/MM/DD"
     // ==========================
     async function importTransactionsFromCsvText(text) {
       const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
@@ -804,9 +889,7 @@
         if (!dateNorm) continue;
 
         const fy = calcFiscalYear(dateNorm);
-        if (fy !== fiscalYear) {
-          continue;
-        }
+        if (fy !== fiscalYear) continue;
 
         const amount = parseInt(amountStr.replace(/,/g, ""), 10);
         if (isNaN(amount)) continue;
@@ -856,11 +939,22 @@
     }
 
     function renderSummary() {
-      const { totalBudget, totalRemaining, percent } = calcTotal();
+      const { totalBudget, totalUsed, totalRemaining, percent } = calcTotal();
+      const color = getUsageColor(percent);
+
       document.getElementById("total-budget").textContent = formatYen(totalBudget);
-      document.getElementById("total-remaining").textContent = formatYen(totalRemaining);
-      document.getElementById("total-percent").textContent = percent.toFixed(1) + "%";
-      document.getElementById("total-percent-bar").style.width = percent.toFixed(1) + "%";
+      document.getElementById("total-used").textContent = formatYen(totalUsed);
+      const remainingEl = document.getElementById("total-remaining");
+      remainingEl.textContent = formatYen(totalRemaining);
+      remainingEl.style.color = color;
+
+      const percentText = document.getElementById("total-percent");
+      percentText.textContent = percent.toFixed(1) + "%";
+      percentText.style.color = color;
+
+      const bar = document.getElementById("total-percent-bar");
+      bar.style.width = percent.toFixed(1) + "%";
+      bar.style.backgroundColor = color;
     }
 
     function renderCategories() {
@@ -870,7 +964,7 @@
         container.innerHTML = `
           <div class="card">
             <div class="transaction-empty">
-              選択した年度にはまだ費目データがありません。上のフォームまたは「新年度作成」ボタンから費目を追加してください。
+              選択した年度にはまだ費目データがありません。「費目を追加」ボタンから費目を追加してください。
             </div>
           </div>
         `;
@@ -880,8 +974,7 @@
       const html = state.categories
         .map((cat) => {
           const { used, remaining, percent } = calcCategory(cat);
-          const percentClass = getPercentBadgeClass(percent);
-          const remainingClass = remaining < 0 ? "summary-item-value text-danger" : "summary-item-value";
+          const usageColor = getUsageColor(percent);
 
           const transactions = state.transactions.filter((t) => t.categoryId === cat.id);
 
@@ -916,17 +1009,23 @@
                 <div class="category-name">● ${cat.name}</div>
                 <div class="category-numbers">
                   <span>予算：${formatYen(cat.budget)}</span>
-                  <span>残高：<span class="${remainingClass}">${formatYen(remaining)}</span></span>
-                  <span>使用率：${percent.toFixed(1)}% <span class="${percentClass}">${percent.toFixed(1)}%</span></span>
+                  <span>使用額：${formatYen(used)}</span>
+                  <span>残高：<span style="color:${usageColor};">${formatYen(remaining)}</span></span>
                 </div>
               </div>
               <div class="category-toolbar">
-                <button type="button" class="btn-outline btn-xs edit-category">費目編集</button>
-                <button type="button" class="btn-outline btn-xs delete-category">費目削除</button>
+                <button type="button" class="btn-outline btn-xs reorder-up" title="上へ">▲</button>
+                <button type="button" class="btn-outline btn-xs reorder-down" title="下へ">▼</button>
+                <button type="button" class="btn-outline btn-xs edit-category">編集</button>
+                <button type="button" class="btn-outline btn-xs delete-category">削除</button>
               </div>
             </div>
-            <div class="percent-bar">
-              <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%"></div>
+            <div style="font-size:0.85rem;margin-top:2px;">
+              使用率：${percent.toFixed(1)}%
+              <span class="badge-percent" style="background-color:${usageColor}22;color:${usageColor};">${percent.toFixed(1)}%</span>
+              <div class="percent-bar">
+                <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%;background-color:${usageColor};"></div>
+              </div>
             </div>
             <div class="category-actions">
               <button class="btn-primary toggle-add-form">支出を記録</button>
@@ -967,6 +1066,13 @@
     // ==========================
     // イベント
     // ==========================
+    function openModal(el) {
+      el.classList.remove("hidden");
+    }
+    function closeModal(el) {
+      el.classList.add("hidden");
+    }
+
     function attachGlobalEvents() {
       const yearSelect = document.getElementById("fiscal-year-select");
       yearSelect.addEventListener("change", async () => {
@@ -977,21 +1083,25 @@
         }
       });
 
-      document.getElementById("reload-btn").addEventListener("click", async () => {
-        if (state.currentFiscalYear != null) {
-          await loadDataForFiscalYear(state.currentFiscalYear);
-        }
+      // メニュー モーダル
+      const menuDialog = document.getElementById("menu-dialog");
+      document.getElementById("menu-btn").addEventListener("click", () => openModal(menuDialog));
+      document.getElementById("close-menu-btn").addEventListener("click", () => closeModal(menuDialog));
+      menuDialog.addEventListener("click", (e) => {
+        if (e.target === menuDialog) closeModal(menuDialog);
       });
 
-      document.getElementById("new-year-btn").addEventListener("click", async () => {
-        try {
-          await createNextFiscalYearFromLast();
-        } catch (e) {
-          console.error(e);
-          alert("新年度データ作成中にエラーが発生しました。");
-        }
+      // 費目追加モーダル
+      const categoryDialog = document.getElementById("category-dialog");
+      document.getElementById("open-add-category-dialog")
+        .addEventListener("click", () => openModal(categoryDialog));
+      document.getElementById("cancel-add-category")
+        .addEventListener("click", () => closeModal(categoryDialog));
+      categoryDialog.addEventListener("click", (e) => {
+        if (e.target === categoryDialog) closeModal(categoryDialog);
       });
 
+      // 費目追加フォーム
       const addCatForm = document.getElementById("add-category-form");
       addCatForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -1010,8 +1120,10 @@
         await addCategory(name, budgetVal);
         nameInput.value = "";
         budgetInput.value = "";
+        closeModal(categoryDialog);
       });
 
+      // CSVエクスポート
       document.getElementById("export-csv-btn").addEventListener("click", () => {
         if (!state.currentFiscalYear) {
           alert("年度が選択されていません。");
@@ -1022,6 +1134,7 @@
         downloadBlob(csv, filename);
       });
 
+      // CSVインポート
       const csvInput = document.getElementById("csv-file-input");
       document.getElementById("import-csv-btn").addEventListener("click", () => {
         csvInput.value = "";
@@ -1042,9 +1155,27 @@
         };
         reader.readAsText(file, "utf-8");
       });
+
+      // 再読み込み
+      document.getElementById("reload-btn").addEventListener("click", async () => {
+        if (state.currentFiscalYear != null) {
+          await loadDataForFiscalYear(state.currentFiscalYear);
+        }
+      });
+
+      // 新年度作成
+      document.getElementById("new-year-btn").addEventListener("click", async () => {
+        try {
+          await createNextFiscalYearFromLast();
+        } catch (e) {
+          console.error(e);
+          alert("新年度データ作成中にエラーが発生しました。");
+        }
+      });
     }
 
     function attachCategoryAndTransactionEvents() {
+      // 費目編集
       document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const card = btn.closest(".category-card");
@@ -1070,6 +1201,7 @@
         });
       });
 
+      // 費目削除
       document.querySelectorAll(".category-card .delete-category").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const card = btn.closest(".category-card");
@@ -1080,6 +1212,23 @@
         });
       });
 
+      // 費目順序 上下
+      document.querySelectorAll(".category-card .reorder-up").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          await moveCategory(catId, "up");
+        });
+      });
+      document.querySelectorAll(".category-card .reorder-down").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          await moveCategory(catId, "down");
+        });
+      });
+
+      // 「支出を記録」
       document.querySelectorAll(".category-card .toggle-add-form").forEach((btn) => {
         btn.addEventListener("click", () => {
           const card = btn.closest(".category-card");
@@ -1091,6 +1240,7 @@
         });
       });
 
+      // 支出フォーム送信
       document.querySelectorAll(".category-card .add-transaction-form").forEach((form) => {
         form.addEventListener("submit", async (e) => {
           e.preventDefault();
@@ -1104,12 +1254,7 @@
             alert("日付・金額・内容は必須です。");
             return;
           }
-          const payload = {
-            date,
-            amount: amountVal,
-            description,
-            shop
-          };
+          const payload = { date, amount: amountVal, description, shop };
           const editId = form.dataset.editId;
           if (editId) {
             await updateTransaction(editId, payload);
@@ -1129,6 +1274,7 @@
         });
       });
 
+      // 支出編集
       document.querySelectorAll(".category-card .edit-transaction").forEach((btn) => {
         btn.addEventListener("click", () => {
           const item = btn.closest(".transaction-item");
@@ -1147,6 +1293,7 @@
         });
       });
 
+      // 支出削除
       document.querySelectorAll(".category-card .delete-transaction").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const item = btn.closest(".transaction-item");
