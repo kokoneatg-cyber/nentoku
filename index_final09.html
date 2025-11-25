@@ -123,7 +123,7 @@
       width: 100%;
       height: 8px;
       border-radius: 999px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       margin-top: 0;
       overflow: hidden;
       flex: 1;
@@ -256,7 +256,7 @@
       display: inline-block;
       padding: 2px 6px;
       border-radius: 999px;
-      font-size: 0.7rem;
+      font-size: 0.9rem;
       font-weight: 600;
       margin-left: 4px;
     }
@@ -413,7 +413,7 @@
 
     .tran-row-type1 .tran-date,
     .tran-row-type1 .tran-desc {
-      background-color: #dce2f9;
+      background-color: #e2f7fa;
     }
 
     .tran-row-type1 .tran-amount,
@@ -423,12 +423,12 @@
 
     .tran-row-type2 .tran-date,
     .tran-row-type2 .tran-desc {
-      background-color: #dcf5f9;
+      background-color: #dce2f9;
     }
 
     .tran-row-type2 .tran-amount,
     .tran-row-type2 .tran-shop {
-      background-color: #d2e9ed;
+      background-color: #d2d7ed;
     }
 
 .tran-date {
@@ -747,8 +747,8 @@ function getUsageCardColor(percent) {
       if (percent <= 1) return "#dbdbdb";
       if (percent <= 70) return "#cfe2fb";
       if (percent <= 90) return "#f3e0c4";
-      if (percent <= 100) return "#f1b9c3"; 
-      return "#e6b9f1";
+      if (percent <= 100) return "#fbc8d1"; 
+      return "#d5b1de";
     }
 
     function calcCategory(cat) {
@@ -794,8 +794,8 @@ function getUsageCardColor(percent) {
       const catRef = collection(db, "categories");
       const catQuery = query(
         catRef,
-        where("fiscalYear", "==", fiscalYear),
-    //    orderBy("order", "asc")
+        where("fiscalYear", "==", fiscalYear)
+        // orderBy("order", "asc") は使わない
       );
       const catSnap = await getDocs(catQuery);
       const categories = [];
@@ -810,11 +810,14 @@ function getUsageCardColor(percent) {
         });
       });
 
+      // 🔽 ここを追加：order フィールドでソート
+      categories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
       const tranRef = collection(db, "transactions");
       const tranQuery = query(
         tranRef,
         where("fiscalYear", "==", fiscalYear),
-   //     orderBy("date", "desc")
+        // orderBy("date", "desc") はインデックス問題があるのでコメントのままでOK
       );
       const tranSnap = await getDocs(tranQuery);
       const transactions = [];
