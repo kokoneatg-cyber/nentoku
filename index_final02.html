@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>年間特別費3（Firestore版）</title>
+  <title>年間特別費 ver 0.2（Firestore版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -710,7 +710,7 @@
       if (percent <= 1) return "#777777";
       if (percent <= 70) return "#2f88f6";
       if (percent <= 90) return "#fca21f";
-      if (percent <= 100) return "#f44362";
+      if (percent < 100) return "#f44362";
       return "#950dad";
     }
     
@@ -718,7 +718,7 @@
       if (percent <= 1) return "#dbdbdb";
       if (percent <= 70) return "#cfe2fb";
       if (percent <= 90) return "#f3e0c4";
-      if (percent <= 100) return "#f1b9c3";
+      if (percent < 100) return "#f1b9c3";
       return "#e6b9f1";
     }
 
