@@ -705,6 +705,7 @@
     }
 
     // 使用率による色
+    
     function getUsageColor(percent) {
       if (percent <= 1) return "#777777";
       if (percent <= 70) return "#2f88f6";
@@ -712,12 +713,13 @@
       if (percent <= 100) return "#f44362";
       return "#950dad";
     }
+    
     function getUsageCardColor(percent) {
-      if (percent <= 1) return "#b4b4b4";
-      if (percent <= 70) return "#b2d3fd";
-      if (percent <= 90) return "#edcea2";
-      if (percent <= 100) return "#ee8c9d";
-      return "#c47ad1";
+      if (percent <= 1) return "#dbdbdb";
+      if (percent <= 70) return "#cfe2fb";
+      if (percent <= 90) return "#f3e0c4";
+      if (percent <= 100) return "#f1b9c3";
+      return "#e6b9f1";
     }
 
     function calcCategory(cat) {
