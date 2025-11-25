@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>年間特別費 ver 0.2（Firestore版）</title>
+  <title>年間特別費 ver 0.6（Firestore版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -843,6 +843,9 @@
       const ok = confirm("この費目と、その費目に紐づくすべての支出を削除します。よろしいですか？");
       if (!ok) return;
 
+      const fiscalYear = state.currentFiscalYear;
+
+      // ① まず、この費目に紐づく支出をすべて削除
       const tranRef = collection(db, "transactions");
       const tranQuery = query(tranRef, where("categoryId", "==", catId));
       const tranSnap = await getDocs(tranQuery);
@@ -852,9 +855,46 @@
       });
       await Promise.all(deletePromises);
 
+      // ② 費目（カテゴリ）本体を削除
       await deleteDoc(doc(db, "categories", catId));
-      await loadDataForFiscalYear(state.currentFiscalYear);
+
+      // ③ この年度にまだ費目が残っているか確認
+      const catRef = collection(db, "categories");
+      const catQuery = query(catRef, where("fiscalYear", "==", fiscalYear));
+      const catSnapAfter = await getDocs(catQuery);
+
+      if (catSnapAfter.empty) {
+        // 🔥 この年度の費目がすべて無くなった → 年度データ丸ごと削除
+
+        // 念のため、この年度の残りの支出も全削除（理論上もう無いはずだけど保険）
+        const fyTranRef = collection(db, "transactions");
+        const fyTranQuery = query(fyTranRef, where("fiscalYear", "==", fiscalYear));
+        const fyTranSnap = await getDocs(fyTranQuery);
+        const deleteFyTranPromises = [];
+        fyTranSnap.forEach((d) => {
+          deleteFyTranPromises.push(deleteDoc(doc(db, "transactions", d.id)));
+        });
+        await Promise.all(deleteFyTranPromises);
+
+        // 年度一覧を作り直し（この年度は categories から消えるのでドロップダウンからも消える）
+        await loadFiscalYearsFromCategories();
+
+        if (state.fiscalYears.length > 0) {
+          // まだ他の年度が残っている場合 → その年度のデータを読み込み
+          await loadDataForFiscalYear(state.currentFiscalYear);
+        } else {
+          // すべての年度の費目が無くなった場合
+          state.currentFiscalYear = null;
+          state.categories = [];
+          state.transactions = [];
+          renderAll();
+        }
+      } else {
+        // まだこの年度に他の費目が残っている → そのままこの年度を再読み込み
+        await loadDataForFiscalYear(fiscalYear);
+      }
     }
+
 
     async function moveCategory(catId, direction) {
       const idx = state.categories.findIndex((c) => c.id === catId);
