@@ -109,6 +109,9 @@
     .summary-usage-row {
       margin-top: 10px;
       font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .summary-usage-row span {
@@ -222,8 +225,10 @@
     }
 
     .category-numbers {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      column-gap: 4px;
       margin-top: 4px;
       font-size: 0.9rem;
     }
@@ -232,6 +237,10 @@
       background-color: #ffffff;
       padding: 2px 4px;
       border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
     }
 
 
@@ -508,9 +517,6 @@
     }
 
     @media (max-width: 540px) {
-      .summary-grid {
-        grid-template-columns: 1fr;
-      }
       .add-form-row {
         grid-template-columns: 1fr 1fr;
       }
@@ -534,7 +540,7 @@
       <span>（4月～翌年3月）</span>
     </div>
 
-    <div class="card">
+    <div class="card" id="summary-card">
       <div class="summary-grid">
         <div>
           <div class="summary-item-label">予算</div>
@@ -730,7 +736,7 @@
         .filter((t) => t.categoryId === cat.id)
         .reduce((sum, t) => sum + (t.amount || 0), 0);
       const remaining = cat.budget - used;
-      const percent = cat.budget > 0 ? Math.min(100, (used / cat.budget) * 100) : 0;
+      const percent = cat.budget > 0 ? (used / cat.budget) * 100 : 0;
       return { used, remaining, percent };
     }
 
@@ -743,7 +749,7 @@
         totalUsed += used;
       });
       const totalRemaining = totalBudget - totalUsed;
-      const percent = totalBudget > 0 ? Math.min(100, (totalUsed / totalBudget) * 100) : 0;
+      const percent = totalBudget > 0 ? (totalUsed / totalBudget) * 100 : 0;
       return { totalBudget, totalUsed, totalRemaining, percent };
     }
 
