@@ -1,0 +1,1539 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>年間特別費 ver 0.2（Firestore版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .app {
+      max-width: 600px;           /* iPhone 幅でも崩れないように */
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* ヘッダー */
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0;
+    }
+
+    .menu-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    /* 年度行 */
+
+    .year-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: nowrap;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .year-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #fiscal-year-select {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      background: #ffffff;
+    }
+
+    /* 共通カード */
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+    }
+
+    /* 総合サマリ */
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .summary-item-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .summary-item-value {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .summary-usage-row {
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .summary-usage-row span {
+      font-weight: 600;
+    }
+
+    .percent-bar {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      margin-top: 0;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .percent-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: #70a3f3;
+      transition: width 0.3s ease;
+    }
+
+    /* セクションヘッダー */
+
+    .section-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 16px 0 8px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-left: 4px solid #3b82f6;
+      padding-left: 8px;
+    }
+
+    /* ボタン共通 */
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+
+    .btn-xs {
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      border-radius: 999px;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    /* 費目カード */
+
+    .category-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      margin-bottom: 12px;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .category-title-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    .category-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
+
+    .category-toolbar button {
+      padding: 3px 6px;
+      font-size: 0.7rem;
+    }
+
+    .category-numbers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      column-gap: 4px;
+    }
+
+    .category-numbers span {
+      background-color: #ffffff;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+
+    .category-usage-row {
+      font-size: 0.85rem;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-percent {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+
+    .category-actions {
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .category-footer-row {
+      margin-top: 8px;
+    }
+
+    .cat-details {
+      display: block;
+    }
+
+    .cat-details summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .cat-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .cat-details summary::before {
+      content: "＞";
+      font-size: 0.9rem;
+      color: #555;
+      display: inline-block;
+      width: 1em;
+      margin-right: 2px;
+    }
+
+    .cat-details[open] summary::before {
+      content: "▼";
+    }
+
+    .category-footer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .category-footer-header .toggle-add-form {
+      white-space: nowrap;
+    }
+
+    .category-footer-body {
+      margin-top: 4px;
+    }
+
+    /* 支出追加フォーム */
+
+    .add-form {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1px dashed #e5e7eb;
+    }
+
+    .add-form-row {
+      display: grid;
+      grid-template-columns: 130px 80px 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .add-form-row input {
+      width: 100%;
+      padding: 4px 6px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      box-sizing: border-box;
+    }
+
+    .add-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    /* 過去の支出（1行表示） */
+
+    details {
+      margin-top: 4px;
+      font-size: 0.85rem;
+    }
+
+    details summary {
+      cursor: pointer;
+      list-style: none;
+      outline: none;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details summary::before {
+      content: "＞";
+      font-size: 0.7rem;
+    }
+
+    details[open] summary::before {
+      content: "▼ ";
+    }
+
+    .transaction-list {
+      margin-top: 4px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 4px;
+    }
+
+/* 過去の支出 1行全体 */
+.transaction-item {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px dashed #e5e7eb;
+  padding: 2px 0;
+  font-size: 0.8rem;
+  gap: 6px;
+}
+
+/* 左側：日付 / 金額 / 内容 / 店舗 */
+.transaction-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 共通：省略あり1行 */
+.transaction-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 日付：最大5文字（MM/DD）＋余白 → 7ch */
+.tran-date {
+  flex: 0 0 7ch;
+  background: #eeeeee;
+  padding: 1px 3px;
+  border-radius: 4px;
+}
+
+/* 金額：右寄せ、固定幅 */
+.tran-amount {
+  flex: 0 0 9ch;
+  text-align: right;
+}
+
+/* 内容：残り全部を使う */
+.tran-desc {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: #eeeeee;
+  padding: 1px 3px;
+  border-radius: 4px;
+}
+
+/* 店舗：全角5文字分 */
+.tran-shop {
+  flex: 0 0 5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 右端に固定配置される編集／削除ボタン */
+.transaction-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+}
+
+/* 画面幅が狭いとき（iPhone）店舗フィールドを隠す */
+@media (max-width: 480px) {
+  .tran-shop {
+    display: none;
+  }
+}
+
+    /* モーダル共通 */
+
+    .hidden {
+      display: none !important;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px 18px 14px;
+      width: 92%;
+      max-width: 420px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .modal-actions-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .modal-actions-vertical button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .modal-note {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 540px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .add-form-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .transaction-text {
+        grid-template-columns: 70px 70px 1fr 70px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header-row">
+      <h1>年間特別費</h1>
+      <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">☰</button>
+    </div>
+
+    <div class="year-row">
+      <div class="year-left">
+        <select id="fiscal-year-select"></select>
+      </div>
+      <span>（4月～翌年3月）</span>
+    </div>
+
+    <div class="card">
+      <div class="summary-grid">
+        <div>
+          <div class="summary-item-label">予算</div>
+          <div class="summary-item-value" id="total-budget">0円</div>
+        </div>
+        <div>
+          <div class="summary-item-label">使用額</div>
+          <div class="summary-item-value" id="total-used">0円</div>
+        </div>
+        <div>
+          <div class="summary-item-label">残高</div>
+          <div class="summary-item-value" id="total-remaining">0円</div>
+        </div>
+      </div>
+      <div class="summary-usage-row">
+        使用率：<span id="total-percent">0%</span>
+        <div class="percent-bar">
+          <div class="percent-bar-fill" id="total-percent-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header-row">
+      <div class="section-title">費目</div>
+      <button id="open-add-category-dialog" class="btn-primary btn-xs">費目を追加</button>
+    </div>
+
+    <div id="categories-container"></div>
+
+    <!-- CSVインポート用ファイル入力（非表示） -->
+    <input type="file" id="csv-file-input" accept=".csv,text/tab-separated-values,text/plain" class="hidden" />
+
+    <!-- メニューモーダル -->
+    <div id="menu-dialog" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">メニュー</div>
+          <button id="close-menu-btn" class="btn-outline btn-xs">閉じる</button>
+        </div>
+        <div class="modal-actions-vertical">
+          <button id="export-csv-btn" class="btn-outline">支出CSVダウンロード</button>
+          <button id="import-csv-btn" class="btn-primary">支出CSVインポート</button>
+          <button id="reload-btn" class="btn-outline">再読み込み</button>
+          <button id="new-year-btn" class="btn-outline">新年度作成</button>
+          <button id="fix-dates-btn" class="btn-outline">日付フォーマット一括修正</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 費目追加モーダル -->
+    <div id="category-dialog" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">費目を追加</div>
+        </div>
+        <form id="add-category-form">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input type="text" id="new-category-name" placeholder="費目名（例：洋服）" required
+                   style="padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            <input type="number" id="new-category-budget" placeholder="予算額" min="0" required
+                   style="padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-add-category" class="btn-outline">キャンセル</button>
+            <button type="submit" class="btn-primary">費目を追加</button>
+          </div>
+          <div class="modal-note">
+            費目名・予算額はあとから編集／削除できます。
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    /* ----------------------------------------
+       Firebase 初期化（v12.6.0）
+    ---------------------------------------- */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      orderBy,
+      getDocs,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // ★★★ あなたの firebaseConfig に置き換えてください ★★★
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7UqsmHTLIr15y7I2TJFMk1xqrSBl4P2g",
+      authDomain: "nentoku-3869f.firebaseapp.com",
+      projectId: "nentoku-3869f",
+      storageBucket: "nentoku-3869f.firebasestorage.app",
+      messagingSenderId: "153031673000",
+      appId: "1:153031673000:web:87b805c4f2ca1ea7cf6e9d"
+    };
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    /* ----------------------------------------
+       状態
+    ---------------------------------------- */
+    const state = {
+      fiscalYears: [],
+      currentFiscalYear: null,
+      categories: [],
+      transactions: []
+    };
+
+    /* ----------------------------------------
+       ユーティリティ
+    ---------------------------------------- */
+    function formatYen(num) {
+      return num.toLocaleString("ja-JP") + "円";
+    }
+
+    function formatDateForView(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr || "";
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${m}/${day}`;
+    }
+    // "2024/8/1" や "2024-8-1" を "2024-08-01" にそろえる
+    function normalizeDateToIso(dateStr) {
+      if (!dateStr) return "";
+      const trimmed = dateStr.trim();
+      if (!trimmed) return "";
+
+      const m = trimmed.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+      let d;
+      if (m) {
+        const year = parseInt(m[1], 10);
+        const month = parseInt(m[2], 10);
+        const day = parseInt(m[3], 10);
+        d = new Date(year, month - 1, day);
+      } else {
+        d = new Date(trimmed);
+      }
+
+      if (isNaN(d)) return "";
+
+      const y = d.getFullYear();
+      const m2 = String(d.getMonth() + 1).padStart(2, "0");
+      const d2 = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m2}-${d2}`;
+    }
+
+
+    // 4月始まりの年度
+    function calcFiscalYear(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return null;
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      return m >= 4 ? y : y - 1;
+    }
+
+    function getNowFiscalYear() {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = today.getMonth() + 1;
+      return m >= 4 ? y : y - 1;
+    }
+
+    // 使用率による色
+    
+    function getUsageColor(percent) {
+      if (percent <= 1) return "#777777";
+      if (percent <= 70) return "#2f88f6";
+      if (percent <= 90) return "#fca21f";
+      if (percent < 100) return "#f44362";
+      return "#950dad";
+    }
+    
+    function getUsageCardColor(percent) {
+      if (percent <= 1) return "#dbdbdb";
+      if (percent <= 70) return "#cfe2fb";
+      if (percent <= 90) return "#f3e0c4";
+      if (percent < 100) return "#f1b9c3";
+      return "#e6b9f1";
+    }
+
+    function calcCategory(cat) {
+      const used = state.transactions
+        .filter((t) => t.categoryId === cat.id)
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      const remaining = cat.budget - used;
+      const percent = cat.budget > 0 ? Math.min(100, (used / cat.budget) * 100) : 0;
+      return { used, remaining, percent };
+    }
+
+    function calcTotal() {
+      let totalBudget = 0;
+      let totalUsed = 0;
+      state.categories.forEach((cat) => {
+        const { used } = calcCategory(cat);
+        totalBudget += cat.budget;
+        totalUsed += used;
+      });
+      const totalRemaining = totalBudget - totalUsed;
+      const percent = totalBudget > 0 ? Math.min(100, (totalUsed / totalBudget) * 100) : 0;
+      return { totalBudget, totalUsed, totalRemaining, percent };
+    }
+
+    /* ----------------------------------------
+       Firestore 読み込み
+    ---------------------------------------- */
+    async function loadFiscalYearsFromCategories() {
+      const snap = await getDocs(collection(db, "categories"));
+      const yearsSet = new Set();
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (typeof data.fiscalYear === "number") yearsSet.add(data.fiscalYear);
+      });
+      let years = Array.from(yearsSet);
+      if (years.length === 0) years = [getNowFiscalYear()];
+      years.sort((a, b) => a - b);
+      state.fiscalYears = years;
+      state.currentFiscalYear = years[years.length - 1];
+    }
+
+    async function loadDataForFiscalYear(fiscalYear) {
+      const catRef = collection(db, "categories");
+      const catQuery = query(
+        catRef,
+        where("fiscalYear", "==", fiscalYear),
+        orderBy("order", "asc")
+      );
+      const catSnap = await getDocs(catQuery);
+      const categories = [];
+      catSnap.forEach((d) => {
+        const data = d.data();
+        categories.push({
+          id: d.id,
+          name: data.name,
+          budget: data.budget ?? 0,
+          order: data.order ?? 0,
+          fiscalYear: data.fiscalYear
+        });
+      });
+
+      const tranRef = collection(db, "transactions");
+      const tranQuery = query(
+        tranRef,
+        where("fiscalYear", "==", fiscalYear),
+        orderBy("date", "asc")
+      );
+      const tranSnap = await getDocs(tranQuery);
+      const transactions = [];
+      tranSnap.forEach((d) => {
+        const data = d.data();
+        transactions.push({
+          id: d.id,
+          categoryId: data.categoryId,
+          date: data.date,
+          shop: data.shop ?? "",
+          description: data.description ?? "",
+          amount: data.amount ?? 0,
+          fiscalYear: data.fiscalYear
+        });
+      });
+
+      state.categories = categories;
+      state.transactions = transactions;
+      renderAll();
+    }
+
+    /* ----------------------------------------
+       Firestore 書き込み
+    ---------------------------------------- */
+    async function addCategory(name, budget) {
+      const fiscalYear = state.currentFiscalYear;
+      const nowOrder = state.categories.length > 0
+        ? Math.max(...state.categories.map((c) => c.order ?? 0)) + 1
+        : 1;
+      await addDoc(collection(db, "categories"), {
+        name,
+        budget,
+        order: nowOrder,
+        fiscalYear
+      });
+      await loadDataForFiscalYear(fiscalYear);
+    }
+
+    async function updateCategory(catId, newName, newBudget) {
+      const ref = doc(db, "categories", catId);
+      await updateDoc(ref, { name: newName, budget: newBudget });
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+
+    async function deleteCategoryAndTransactions(catId) {
+      const ok = confirm("この費目と、その費目に紐づくすべての支出を削除します。よろしいですか？");
+      if (!ok) return;
+
+      const tranRef = collection(db, "transactions");
+      const tranQuery = query(tranRef, where("categoryId", "==", catId));
+      const tranSnap = await getDocs(tranQuery);
+      const deletePromises = [];
+      tranSnap.forEach((d) => {
+        deletePromises.push(deleteDoc(doc(db, "transactions", d.id)));
+      });
+      await Promise.all(deletePromises);
+
+      await deleteDoc(doc(db, "categories", catId));
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+
+    async function moveCategory(catId, direction) {
+      const idx = state.categories.findIndex((c) => c.id === catId);
+      if (idx === -1) return;
+      const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= state.categories.length) return;
+
+      const current = state.categories[idx];
+      const other = state.categories[targetIdx];
+
+      const ref1 = doc(db, "categories", current.id);
+      const ref2 = doc(db, "categories", other.id);
+
+      await Promise.all([
+        updateDoc(ref1, { order: other.order }),
+        updateDoc(ref2, { order: current.order })
+      ]);
+
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+
+    async function addTransaction(categoryId, payload) {
+      const fy = calcFiscalYear(payload.date);
+      if (fy === null) {
+        alert("日付が不正です。");
+        return;
+      }
+      await addDoc(collection(db, "transactions"), {
+        categoryId,
+        date: payload.date,
+        shop: payload.shop,
+        description: payload.description,
+        amount: payload.amount,
+        fiscalYear: fy
+      });
+      if (fy === state.currentFiscalYear) {
+        await loadDataForFiscalYear(state.currentFiscalYear);
+      }
+    }
+
+    async function updateTransaction(tranId, payload) {
+      const fy = calcFiscalYear(payload.date);
+      if (fy === null) {
+        alert("日付が不正です。");
+        return;
+      }
+      const ref = doc(db, "transactions", tranId);
+      await updateDoc(ref, {
+        date: payload.date,
+        shop: payload.shop,
+        description: payload.description,
+        amount: payload.amount,
+        fiscalYear: fy
+      });
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+
+    async function deleteTransaction(tranId, summaryText) {
+      const ok = confirm(summaryText + "\n\nこの支出を削除しますか？");
+      if (!ok) return;
+      await deleteDoc(doc(db, "transactions", tranId));
+      await loadDataForFiscalYear(state.currentFiscalYear);
+    }
+
+    async function createNextFiscalYearFromLast() {
+      if (!state.fiscalYears || state.fiscalYears.length === 0) {
+        alert("まだ年度データがありません。先に現在の年度の費目を追加してください。");
+        return;
+      }
+
+      const lastYear = Math.max(...state.fiscalYears);
+      const newYear = lastYear + 1;
+
+      const ok = confirm(`${lastYear}年度の費目をコピーして、${newYear}年度のデータを作成します。よろしいですか？`);
+      if (!ok) return;
+
+      const catRef = collection(db, "categories");
+      const qLast = query(
+        catRef,
+        where("fiscalYear", "==", lastYear),
+        orderBy("order", "asc")
+      );
+      const snap = await getDocs(qLast);
+
+      if (snap.empty) {
+        alert(`${lastYear}年度の費目データがありません。`);
+        return;
+      }
+
+      const newCatPromises = [];
+      let fallbackOrder = 1;
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        newCatPromises.push(
+          addDoc(collection(db, "categories"), {
+            name: d.name,
+            budget: d.budget ?? 0,
+            order: typeof d.order === "number" ? d.order : fallbackOrder++,
+            fiscalYear: newYear
+          })
+        );
+      });
+
+      await Promise.all(newCatPromises);
+
+      if (!state.fiscalYears.includes(newYear)) {
+        state.fiscalYears.push(newYear);
+        state.fiscalYears.sort((a, b) => a - b);
+      }
+
+      state.currentFiscalYear = newYear;
+      await loadDataForFiscalYear(newYear);
+      renderYearSelect();
+      alert(`${newYear}年度の費目データを作成しました。`);
+    }
+
+    /* ----------------------------------------
+       CSV エクスポート（タブ区切り）
+    ---------------------------------------- */
+    function buildTransactionsCsvForCurrentYear() {
+      const header = ["費目", "日付", "店舗", "内容", "金額"];
+      const lines = [];
+      lines.push(header.join("\t"));
+
+      const catMap = new Map();
+      state.categories.forEach((c) => { catMap.set(c.id, c.name); });
+
+      state.transactions.forEach((t) => {
+        const catName = catMap.get(t.categoryId) || "";
+        const csvDate = t.date ? t.date.replace(/-/g, "/") : "";
+        lines.push([
+          catName,
+          csvDate,
+          t.shop || "",
+          t.description || "",
+          String(t.amount)
+        ].join("\t"));
+      });
+
+      return lines.join("\r\n");
+    }
+
+    function downloadBlob(text, filename) {
+      const blob = new Blob([text], { type: "text/tab-separated-values;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* ----------------------------------------
+       CSV インポート
+    ---------------------------------------- */
+    async function importTransactionsFromCsvText(text) {
+      const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+      if (lines.length === 0) return;
+
+      let startIndex = 0;
+      const firstCols = lines[0].split("\t");
+      const hasHeader = firstCols[0] === "費目";
+      if (hasHeader) startIndex = 1;
+
+      const fiscalYear = state.currentFiscalYear;
+
+      const catNameToId = new Map();
+      state.categories.forEach((c) => {
+        if (c.fiscalYear === fiscalYear) {
+          catNameToId.set(c.name, c.id);
+        }
+      });
+
+      let importedCount = 0;
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const cols = lines[i].split("\t");
+        if (cols.length < 5) continue;
+
+        const [categoryName, dateCsv, shop, description, amountStr] = cols;
+        if (!categoryName || !dateCsv) continue;
+
+        const dateIso = normalizeDateToIso(dateCsv);
+        if (!dateIso) continue;
+
+        const fy = calcFiscalYear(dateIso);
+        if (fy !== fiscalYear) continue;
+
+        const amount = parseInt(amountStr.replace(/,/g, ""), 10);
+        if (isNaN(amount)) continue;
+
+        let catId = catNameToId.get(categoryName);
+        if (!catId) {
+          const nowOrder = state.categories.length > 0
+            ? Math.max(...state.categories.map((c) => c.order ?? 0)) + 1
+            : 1;
+          const newCatRef = await addDoc(collection(db, "categories"), {
+            name: categoryName,
+            budget: 0,
+            order: nowOrder,
+            fiscalYear
+          });
+          catId = newCatRef.id;
+          catNameToId.set(categoryName, catId);
+        }
+
+        await addDoc(collection(db, "transactions"), {
+          categoryId: catId,
+          date: dateIso,
+          shop: shop || "",
+          description: description || "",
+          amount,
+          fiscalYear
+        });
+
+        importedCount++;
+      }
+
+      await loadDataForFiscalYear(fiscalYear);
+      alert(importedCount + "件の支出をインポートしました。");
+    }
+
+    // Firestore 内の transactions の日付(Y-M-Dなど)を YYYY-MM-DD に再フォーマットする
+    async function fixAllTransactionDates() {
+      const tranRef = collection(db, "transactions");
+      const tranSnap = await getDocs(tranRef);
+
+      const updates = [];
+      const total = tranSnap.size;
+      let count = 0;
+
+      for (const docSnap of tranSnap.docs) {
+        const data = docSnap.data();
+        const oldDate = data.date;
+        if (!oldDate) continue;
+
+        const newDate = normalizeDateToIso(oldDate);
+        if (!newDate || newDate === oldDate) continue;
+
+        updates.push(updateDoc(docSnap.ref, { date: newDate }));
+        count++;
+      }
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      alert(`日付を修正しました：${count} 件 / 全 ${total} 件`);
+    }
+
+    /* ----------------------------------------
+       描画
+    ---------------------------------------- */
+    function renderYearSelect() {
+      const select = document.getElementById("fiscal-year-select");
+      select.innerHTML = state.fiscalYears
+        .map((y) => `<option value="${y}">${y}年度</option>`)
+        .join("");
+      if (state.currentFiscalYear != null) {
+        select.value = String(state.currentFiscalYear);
+      }
+    }
+
+    function renderSummary() {
+      const { totalBudget, totalUsed, totalRemaining, percent } = calcTotal();
+      const color = getUsageColor(percent);
+
+      document.getElementById("total-budget").textContent = formatYen(totalBudget);
+      document.getElementById("total-used").textContent = formatYen(totalUsed);
+      const remainingEl = document.getElementById("total-remaining");
+      remainingEl.textContent = formatYen(totalRemaining);
+      remainingEl.style.color = color;
+
+      const percentText = document.getElementById("total-percent");
+      percentText.textContent = percent.toFixed(1) + "%";
+      percentText.style.color = color;
+
+      const bar = document.getElementById("total-percent-bar");
+      bar.style.width = percent.toFixed(1) + "%";
+      bar.style.backgroundColor = color;
+    }
+
+    function renderCategories() {
+      const container = document.getElementById("categories-container");
+
+      if (state.categories.length === 0) {
+        container.innerHTML = `
+          <div class="card">
+            <div class="transaction-empty">
+              選択した年度にはまだ費目データがありません。「費目を追加」ボタンから費目を追加してください。
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const html = state.categories.map((cat, index) => {
+        const { used, remaining, percent } = calcCategory(cat);
+        const usageColor = getUsageColor(percent);
+        const cardColor = getUsageCardColor(percent);
+
+        const transactions = state.transactions.filter((t) => t.categoryId === cat.id);
+
+        const transactionsHtml =
+          transactions.length === 0
+            ? `<div class="transaction-empty">まだ支出の記録がありません。</div>`
+            : transactions.map((t) => {
+                const dateStr = formatDateForView(t.date);
+                const amountStr = t.amount.toLocaleString("ja-JP") + "円";
+                const shopStr = t.shop || "";
+                return `
+                  <div class="transaction-item" data-tran-id="${t.id}" data-category-id="${cat.id}">
+                    <div class="transaction-text">
+                      <span class="tran-date">${dateStr}</span>
+                      <span class="tran-amount">${amountStr}</span>
+                      <span class="tran-desc">${t.description}</span>
+                      <span class="tran-shop">${shopStr}</span>
+                    </div>
+                    <div class="transaction-actions">
+                      <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
+                      <button type="button" class="btn-outline btn-xs delete-transaction">削除</button>
+                    </div>
+                  </div>`;
+              }).join("");
+
+        const isFirst = index === 0;
+        const isLast = index === state.categories.length - 1;
+
+        return `
+          <div class="category-card" data-category-id="${cat.id}" style="background:${cardColor};">
+            <div class="category-header">
+              <div class="category-title-row">
+                <span>● ${cat.name}</span>
+              </div>
+              <div class="category-toolbar">
+                <button type="button" class="btn-outline btn-xs reorder-up" ${isFirst ? "disabled" : ""}>▲</button>
+                <button type="button" class="btn-outline btn-xs reorder-down" ${isLast ? "disabled" : ""}>▼</button>
+                <button type="button" class="btn-outline btn-xs edit-category">編集</button>
+                <button type="button" class="btn-outline btn-xs delete-category">削除</button>
+              </div>
+            </div>
+            <div class="category-numbers">
+              <span>予算 ${formatYen(cat.budget)}</span>
+              <span>使用額 ${formatYen(used)}</span>
+              <span>残高 <span style="color:${usageColor};font-size:1.0rem;">${formatYen(remaining)}</span></span>
+            </div>
+            <div class="category-usage-row">
+              <span>使用率：</span>
+              <span class="badge-percent" style="background-color:${usageColor}22;color:${usageColor};">
+                ${percent.toFixed(1)}%
+              </span>
+              <div class="percent-bar">
+                <div class="percent-bar-fill" style="width:${percent.toFixed(1)}%;background-color:${usageColor};"></div>
+              </div>
+            </div>
+            <div class="category-footer-row">
+              <details class="cat-details">
+                <summary>
+                  <div class="category-footer-header">
+                    <span>過去の支出</span>
+                    <button class="btn-primary toggle-add-form" type="button">支出を記録</button>
+                  </div>
+                </summary>
+                <div class="category-footer-body">
+                  <div class="transaction-list">
+                    ${transactionsHtml}
+                  </div>
+                </div>
+              </details>
+            </div>
+            <form class="add-form hidden add-transaction-form" data-edit-id="">
+              <div class="add-form-row">
+                <input type="date" name="date" required />
+                <input type="number" name="amount" placeholder="金額" required min="1" />
+                <input type="text" name="description" placeholder="内容（例：セーター）" required />
+                <input type="text" name="shop" placeholder="店舗（任意）" />
+              </div>
+              <div class="add-form-actions">
+                <button type="button" class="btn-outline cancel-add">キャンセル</button>
+                <button type="submit" class="btn-primary submit-button">保存</button>
+              </div>
+            </form>
+          </div>
+        `;
+      }).join("");      container.innerHTML = html;
+    }
+
+    function renderAll() {
+      renderYearSelect();
+      renderSummary();
+      renderCategories();
+      attachCategoryAndTransactionEvents();
+    }
+
+    /* ----------------------------------------
+       イベント
+    ---------------------------------------- */
+    function openModal(el) {
+      el.classList.remove("hidden");
+    }
+    function closeModal(el) {
+      el.classList.add("hidden");
+    }
+
+    function attachGlobalEvents() {
+      const yearSelect = document.getElementById("fiscal-year-select");
+      yearSelect.addEventListener("change", async () => {
+        const y = parseInt(yearSelect.value, 10);
+        if (!isNaN(y)) {
+          state.currentFiscalYear = y;
+          await loadDataForFiscalYear(y);
+        }
+      });
+
+      // メニュー
+      const menuDialog = document.getElementById("menu-dialog");
+      const menuBtn = document.getElementById("menu-btn");
+      const closeMenuBtn = document.getElementById("close-menu-btn");
+
+      menuBtn.addEventListener("click", () => openModal(menuDialog));
+      closeMenuBtn.addEventListener("click", () => closeModal(menuDialog));
+      menuDialog.addEventListener("click", (e) => {
+        if (e.target === menuDialog) closeModal(menuDialog);
+      });
+
+      // 費目追加モーダル
+      const categoryDialog = document.getElementById("category-dialog");
+      const openAddCategoryDialogBtn = document.getElementById("open-add-category-dialog");
+      const cancelAddCategoryBtn = document.getElementById("cancel-add-category");
+      const addCatForm = document.getElementById("add-category-form");
+
+      openAddCategoryDialogBtn.addEventListener("click", () => openModal(categoryDialog));
+
+      cancelAddCategoryBtn.addEventListener("click", () => {
+        addCatForm.reset();
+        closeModal(categoryDialog);
+      });
+
+      categoryDialog.addEventListener("click", (e) => {
+        if (e.target === categoryDialog) {
+          addCatForm.reset();
+          closeModal(categoryDialog);
+        }
+      });
+
+      addCatForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nameInput = document.getElementById("new-category-name");
+        const budgetInput = document.getElementById("new-category-budget");
+        const name = nameInput.value.trim();
+        const budgetVal = parseInt(budgetInput.value, 10);
+        if (!name) {
+          alert("費目名を入力してください。");
+          return;
+        }
+        if (isNaN(budgetVal) || budgetVal < 0) {
+          alert("予算額は0以上の数値で入力してください。");
+          return;
+        }
+        await addCategory(name, budgetVal);
+        addCatForm.reset();
+        closeModal(categoryDialog);
+      });
+
+      // CSV / 再読み込み / 新年度
+      const csvInput = document.getElementById("csv-file-input");
+
+      document.getElementById("export-csv-btn").addEventListener("click", () => {
+        if (!state.currentFiscalYear) {
+          alert("年度が選択されていません。");
+          return;
+        }
+        const csv = buildTransactionsCsvForCurrentYear();
+        const filename = `transactions_${state.currentFiscalYear}.csv`;
+        downloadBlob(csv, filename);
+      });
+
+      document.getElementById("import-csv-btn").addEventListener("click", () => {
+        csvInput.value = "";
+        csvInput.click();
+      });
+
+      csvInput.addEventListener("change", () => {
+        const file = csvInput.files && csvInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const text = e.target.result;
+          try {
+            await importTransactionsFromCsvText(String(text));
+          } catch (err) {
+            console.error(err);
+            alert("CSVインポート中にエラーが発生しました。");
+          }
+        };
+        reader.readAsText(file, "utf-8");
+      });
+
+      document.getElementById("reload-btn").addEventListener("click", async () => {
+        if (state.currentFiscalYear != null) {
+          await loadDataForFiscalYear(state.currentFiscalYear);
+        }
+      });
+
+      document.getElementById("new-year-btn").addEventListener("click", async () => {
+        try {
+          await createNextFiscalYearFromLast();
+        } catch (e) {
+          console.error(e);
+          alert("新年度データ作成中にエラーが発生しました。");
+        }
+      });
+
+      const fixBtn = document.getElementById("fix-dates-btn");
+      if (fixBtn) {
+        fixBtn.addEventListener("click", async () => {
+          if (!confirm("Firestore 内の全支出データの日付を YYYY-MM-DD に統一します。よろしいですか？")) {
+            return;
+          }
+          await fixAllTransactionDates();
+          alert("完了しました。ページを再読み込みしてください。");
+        });
+      }
+    }
+
+    function attachCategoryAndTransactionEvents() {
+      // 費目編集
+      document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          const cat = state.categories.find((c) => c.id === catId);
+          if (!cat) return;
+
+          const newName = prompt("費目名を編集", cat.name);
+          if (newName === null) return;
+          const trimmedName = newName.trim();
+          if (!trimmedName) {
+            alert("費目名は空にできません。");
+            return;
+          }
+          const newBudgetStr = prompt("予算額を編集", String(cat.budget));
+          if (newBudgetStr === null) return;
+          const budgetVal = parseInt(newBudgetStr.replace(/,/g, ""), 10);
+          if (isNaN(budgetVal) || budgetVal < 0) {
+            alert("予算額は0以上の数値で入力してください。");
+            return;
+          }
+          await updateCategory(catId, trimmedName, budgetVal);
+        });
+      });
+
+      // 費目削除
+      document.querySelectorAll(".category-card .delete-category").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          await deleteCategoryAndTransactions(catId);
+        });
+      });
+
+      // 費目順序
+      document.querySelectorAll(".category-card .reorder-up").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (btn.disabled) return;
+          const card = btn.closest(".category-card");
+          await moveCategory(card.dataset.categoryId, "up");
+        });
+      });
+      document.querySelectorAll(".category-card .reorder-down").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (btn.disabled) return;
+          const card = btn.closest(".category-card");
+          await moveCategory(card.dataset.categoryId, "down");
+        });
+      });
+
+      // 支出追加フォームの開閉
+      document.querySelectorAll(".category-card .toggle-add-form").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          // summary 内にあるボタンの場合、details の開閉が起きないようにする
+          e.stopPropagation();
+          e.preventDefault();
+          const card = btn.closest(".category-card");
+          const form = card.querySelector(".add-transaction-form");
+          form.dataset.editId = "";
+          form.querySelector(".submit-button").textContent = "保存";
+          form.reset();
+          form.classList.toggle("hidden");
+        });
+      });
+
+      // 支出フォーム送信
+      document.querySelectorAll(".category-card .add-transaction-form").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const card = form.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          const date = form.date.value;
+          const amountVal = parseInt(form.amount.value, 10);
+          const description = form.description.value.trim();
+          const shop = form.shop.value.trim();
+          if (!date || isNaN(amountVal) || amountVal <= 0 || !description) {
+            alert("日付・金額・内容は必須です。");
+            return;
+          }
+          const payload = { date, amount: amountVal, description, shop };
+          const editId = form.dataset.editId;
+          if (editId) {
+            await updateTransaction(editId, payload);
+          } else {
+            await addTransaction(catId, payload);
+          }
+          form.reset();
+          form.dataset.editId = "";
+          form.classList.add("hidden");
+        });
+
+        const cancelBtn = form.querySelector(".cancel-add");
+        cancelBtn.addEventListener("click", () => {
+          form.reset();
+          form.dataset.editId = "";
+          form.classList.add("hidden");
+        });
+      });
+
+      // 支出編集
+      document.querySelectorAll(".category-card .edit-transaction").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = btn.closest(".transaction-item");
+          const card = btn.closest(".category-card");
+          const tranId = item.dataset.tranId;
+          const tran = state.transactions.find((t) => t.id === tranId);
+          if (!tran) return;
+          const form = card.querySelector(".add-transaction-form");
+          form.date.value = tran.date;
+          form.amount.value = tran.amount;
+          form.description.value = tran.description;
+          form.shop.value = tran.shop;
+          form.dataset.editId = tranId;
+          form.querySelector(".submit-button").textContent = "更新";
+          form.classList.remove("hidden");
+        });
+      });
+
+      // 支出削除
+      document.querySelectorAll(".category-card .delete-transaction").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const item = btn.closest(".transaction-item");
+          const card = btn.closest(".category-card");
+          const tranId = item.dataset.tranId;
+          const catId = card.dataset.categoryId;
+          const cat = state.categories.find((c) => c.id === catId);
+          const tran = state.transactions.find((t) => t.id === tranId);
+          if (!tran || !cat) return;
+          const dateStr = formatDateForView(tran.date);
+          const amountStr = tran.amount.toLocaleString("ja-JP") + "円";
+          const shopStr = tran.shop ? `\n店舗：${tran.shop}` : "";
+          const summary =
+            `【費目】${cat.name}\n日付：${dateStr}\n金額：${amountStr}\n内容：${tran.description}${shopStr}`;
+          await deleteTransaction(tranId, summary);
+        });
+      });
+    }
+
+    /* ----------------------------------------
+       起動
+    ---------------------------------------- */
+    async function bootstrap() {
+      try {
+        await loadFiscalYearsFromCategories();
+        attachGlobalEvents();
+        await loadDataForFiscalYear(state.currentFiscalYear);
+      } catch (e) {
+        console.error("初期化エラー:", e);
+        alert("初期化中にエラーが発生しました。Firebase設定やFirestoreルール・インデックスを確認してください。");
+      }
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>
