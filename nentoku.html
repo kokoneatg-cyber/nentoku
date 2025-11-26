@@ -128,9 +128,11 @@
 
     .category-summary-item span.cat-name {
       display: inline-block;
-      width: 15ch;              /* ← ここで 20 文字分の幅を固定 */
-      font-variant-numeric: tabular-nums;  /* 数字の場合も幅を揃える */
-      white-space: nowrap;       /* 改行させない */
+      width: 15ch;                     /* ← 15文字ぶんの幅に固定 */
+      white-space: nowrap;             /* ← 改行禁止 */
+      overflow: hidden;                /* ← はみ出した文字を非表示にする */
+      text-overflow: ellipsis;         /* ← "..." で省略 */
+      font-variant-numeric: tabular-nums;
     }
 
     .category-summary-separator {
