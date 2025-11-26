@@ -96,9 +96,10 @@
     }
 
     .summary-item-label {
-      font-size: 0.8rem;
+      font-size: 1.2rem;
       color: #6b7280;
       margin-bottom: 4px;
+      font-weight: 700;
     }
 
     .summary-item-value {
@@ -127,7 +128,7 @@
 
     .category-summary-item span.cat-name {
       display: inline-block;
-      width: 23ch;              /* ← ここで 20 文字分の幅を固定 */
+      width: 20ch;              /* ← ここで 20 文字分の幅を固定 */
       font-variant-numeric: tabular-nums;  /* 数字の場合も幅を揃える */
       white-space: nowrap;       /* 改行させない */
     }
@@ -137,7 +138,7 @@
       margin-top: 4px;
     }
 
-.summary-usage-row {
+    .summary-usage-row {
       margin-top: 10px;
       font-size: 0.9rem;
       display: flex;
@@ -449,7 +450,7 @@
 
     .tran-row-type1 .tran-amount,
     .tran-row-type1 .tran-shop {
-      background-color: #d2d7ed;
+      background-color: #b6dde3;
     }
 
     .tran-row-type2 .tran-date,
@@ -459,7 +460,7 @@
 
     .tran-row-type2 .tran-amount,
     .tran-row-type2 .tran-shop {
-      background-color: #d2d7ed;
+      background-color: #bfc6e0;
     }
 
 .tran-date {
@@ -596,7 +597,7 @@
     <div class="card" id="summary-card">
       <div class="summary-grid">
         <div>
-          <div class="summary-item-label">予算</div>
+          <div class="summary-item-label">予算合計</div>
           <div class="summary-item-value" id="total-budget">0円</div>
         </div>
         <div>
@@ -1221,9 +1222,9 @@ function getUsageCardColor(percent) {
         return `
         <div class="category-summary-item">
           <div>
-            <span class="cat-name"> <B>● ${cat.name}</b></span>
-            <span><b> ： 予算 ${formatYen(cat.budget)} ⇒ </b></span>
-            <span style="color:${usageColor};font-size:1.0rem;font-weight:bold;"> 残高 ${formatYen(remaining)}</span>
+            <span class="cat-name"><B>● ${cat.name}</b></span>
+            <span><b>：予 ${formatYen(cat.budget)} ⇒ </b></span>
+            <span style="color:${usageColor};font-size:1.0rem;font-weight:bold;"> 残 ${formatYen(remaining)}</span>
           </div>
           <div class="category-summary-separator"></div>
         </div>`;
@@ -1298,9 +1299,9 @@ function renderCategories() {
               </div>
             </div>
             <div class="category-numbers">
-              <span>予算 ${formatYen(cat.budget)}</span>
-              <span>使用額 ${formatYen(used)}</span>
-              <span>残高 <span style="color:${usageColor};font-size:1.0rem;font-weight:bold;">${formatYen(remaining)}</span></span>
+              <span style=font-weight:bold>予算 ${formatYen(cat.budget)}</span>
+              <span style=font-weight:bold>使用額 ${formatYen(used)}</span>
+              <span style="color:${usageColor};font-weight:bold;">残高 ${formatYen(remaining)}</span>
             </div>
             <div class="category-usage-row">
               <span>使用率：</span>
@@ -1329,7 +1330,7 @@ function renderCategories() {
             <form class="add-form hidden add-transaction-form" data-edit-id="">
               <div class="add-form-row">
                 <input type="date" name="date" required />
-                <input type="number" name="amount" placeholder="金額" required min="1" />
+                <input type="number" name="amount" placeholder="金額" required />
                 <input type="text" name="description" placeholder="内容（例：セーター）" required />
                 <input type="text" name="shop" placeholder="店舗（任意）" />
               </div>
@@ -1570,7 +1571,7 @@ function renderCategories() {
           const amountVal = parseInt(form.amount.value, 10);
           const description = form.description.value.trim();
           const shop = form.shop.value.trim();
-          if (!date || isNaN(amountVal) || amountVal <= 0 || !description) {
+          if (!date || isNaN(amountVal) || !description) {
             alert("日付・金額・内容は必須です。");
             return;
           }
