@@ -128,7 +128,7 @@
 
     .category-summary-item span.cat-name {
       display: inline-block;
-      width: 15ch;                     /* ← 15文字ぶんの幅に固定 */
+      width: 18ch;                     /* ← 18文字ぶんの幅に固定 */
       white-space: nowrap;             /* ← 改行禁止 */
       overflow: hidden;                /* ← はみ出した文字を非表示にする */
       text-overflow: ellipsis;         /* ← "..." で省略 */
@@ -1224,9 +1224,9 @@ function getUsageCardColor(percent) {
         return `
         <div class="category-summary-item">
           <div>
-            <span class="cat-name"><B>1● ${cat.name}</b></span>
-            <span><b>：予 ${formatYen(cat.budget)} ⇒ </b></span>
-            <span style="color:${usageColor};font-size:1.0rem;font-weight:bold;"> 残 ${formatYen(remaining)}</span>
+            <span class="cat-name"><B>●${cat.name}</b></span>
+            <span><b>：予 ${formatYen(cat.budget)}⇒</b></span>
+            <span style="color:${usageColor};font-size:1.0rem;font-weight:bold;">残 ${formatYen(remaining)}</span>
           </div>
           <div class="category-summary-separator"></div>
         </div>`;
