@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
+  <meta name="robots" content="noindex,nofollow">
   <title>年間特別費 ver 0.9（Firestore版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
@@ -31,6 +32,23 @@
       align-items: center;
       gap: 12px;
       margin-bottom: 8px;
+    }
+
+    .auth-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .auth-user-label {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     h1 {
@@ -101,6 +119,20 @@
       margin-bottom: 4px;
       font-weight: 700;
     }
+    .summary-sub-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      margin-top: 8px;
+    }
+
+    .category-summary-section-title {
+      margin-top: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #666;
+    }
+
 
     .summary-item-value {
       font-weight: 600;
@@ -128,7 +160,7 @@
 
     .category-summary-item span.cat-name {
       display: inline-block;
-      width: 14ch;                     /* ← 18文字ぶんの幅に固定 */
+      width: 14ch;                     /* ← 14文字分の幅に固定 */
       white-space: nowrap;             /* ← 改行禁止 */
       overflow: hidden;                /* ← はみ出した文字を非表示にする */
       text-overflow: ellipsis;         /* ← "..." で省略 */
@@ -141,7 +173,7 @@
     }
 
     .summary-usage-row {
-      margin-top: 10px;
+      margin-top: 25px;
       font-size: 0.9rem;
       display: flex;
       align-items: center;
@@ -159,8 +191,17 @@
       border-radius: 999px;
       background: #EEEEEE;
       margin-top: 0;
-      overflow: hidden;
+      overflow: visible;
       flex: 1;
+      display: flex;
+  /*  margin-top: 20px;  */    /* ← ここを追加 */
+  /*  margin-bottom: 30px; */  /* ← ここを追加：吹き出しの分しっかり空ける */
+    }
+
+    .percent-bar-segment {
+      width: 0%;
+      height: 100%;
+      transition: width 0.3s ease;
     }
 
     .percent-bar-fill {
@@ -171,6 +212,54 @@
       width: 0%;
       background: #70a3f3;
       transition: width 0.3s ease;
+    }
+
+    .seg-text {
+      font-size: 10px;
+      padding-left: 2px;
+      color: #333;
+    }
+
+    .segment-label {
+      position: absolute;
+      top: -26px;        /* バーの上に配置 */
+      font-size: 12px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1px solid #FFF;
+      white-space: nowrap;
+      background: #fff;
+    }
+    .segment-label::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #fff;  /* ふきだしの三角 */
+    }
+
+    .segment-label2 {
+      position: absolute;
+      top: 10px;                 /* ← バーの下に出す位置を調整 */
+      font-size: 12px;
+      background: #fff;
+      padding: 2px 2px;
+      border-radius: 3px;
+      border: 1px solid #fff;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .segment-label2::after {
+      content: "";
+      position: absolute;
+      bottom: 100%;              /* ← 三角を吹き出しの上に置く */
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-bottom-color: #fff; /* ▼ 下向き三角 */
     }
 
     /* セクションヘッダー */
@@ -416,6 +505,10 @@
       padding-top: 4px;
     }
 
+    .transaction-list.compact .transaction-item:nth-child(n+3) {
+      display: none;
+    }
+
 /* 過去の支出 1行全体 */
 .transaction-item {
   display: flex;
@@ -587,6 +680,11 @@
       <h1>年間特別費</h1>
       <button id="menu-btn" class="btn-outline menu-btn" aria-label="メニュー">☰</button>
     </div>
+    <div class="auth-row">
+      <span id="auth-user-label" class="auth-user-label">未ログイン</span>
+      <button id="login-btn" class="btn-outline btn-xs">Googleでログイン</button>
+      <button id="logout-btn" class="btn-outline btn-xs hidden">ログアウト</button>
+    </div>
 
     <div class="year-row">
       <div class="year-left">
@@ -599,15 +697,15 @@
     <div class="card" id="summary-card">
       <div class="summary-grid">
         <div>
-          <div class="summary-item-label">予算合計</div>
+          <div class="summary-item-label">総予算合計</div>
           <div class="summary-item-value" id="total-budget">0円</div>
         </div>
         <div>
-          <div class="summary-item-label">使用額</div>
+          <div class="summary-item-label">総使用額</div>
           <div class="summary-item-value" id="total-used">0円</div>
         </div>
         <div>
-          <div class="summary-item-label">残高</div>
+          <div class="summary-item-label">総残高</div>
           <div class="summary-item-value" id="total-remaining">0円</div>
         </div>
       </div>
@@ -615,8 +713,41 @@
         使用率：<span id="total-percent">0%</span>
         <div class="percent-bar">
           <div class="percent-bar-fill" id="total-percent-bar"></div>
+          <div class="segment-label" id="label11">総使用額</div>
+          <div class="segment-label" id="label12">総残高</div>
         </div>
       </div>
+      <div><hr></div>
+      <div class="summary-grid">
+        <div>
+          <div class="summary-item-label">稼働中予算枠</div>
+          <div class="summary-item-value" id="active-budget-total">0円</div>
+        </div>
+        <div>
+          <div class="summary-item-label">総使用額</div>
+          <div class="summary-item-value" id="active-used">0円</div>
+        </div>
+        <div>
+          <div class="summary-item-label">稼働中残高</div>
+          <div class="summary-item-value" id="active-remaining">0円</div>
+        </div>
+      </div>
+      <div class="summary-usage-row">
+        使用率B：<span id="total-percent-b">0%</span>
+        <div class="percent-bar">
+          <div class="percent-bar-segment" id="percentB-active-used"></div>
+          <div class="percent-bar-segment" id="percentB-active-remain"></div>
+          <div class="percent-bar-segment" id="percentB-standby"></div>
+          <div class="segment-label" id="label21" >総使用額</div>
+          <div class="segment-label2" id="label22">稼働中残高</div>
+          <div class="segment-label" id="label23" >待機予算</div>
+        </div>
+      </div>
+        <div style="text-align: right;color: #999999; margin-top: 20px;" >
+          <div class="summary-item-label">待機予算枠</div>
+          <div class="summary-item-value" id="standby-budget-total">0円</div>
+        </div>
+      <div><hr></div>
       <div class="summary-toggle-row">
         <button id="toggle-categories-btn" class="btn-outline btn-xs">費目一覧を表示</button>
       </div>
@@ -693,6 +824,16 @@
       doc
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithPopup,
+      GoogleAuthProvider,
+      setPersistence,
+      browserLocalPersistence,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
     // ★★★ あなたの firebaseConfig に置き換えてください ★★★
     const firebaseConfig = {
       apiKey: "AIzaSyA7UqsmHTLIr15y7I2TJFMk1xqrSBl4P2g",
@@ -707,6 +848,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    setPersistence(auth, browserLocalPersistence).catch((e) => {
+      console.error("Auth persistence error:", e);
+    });
+
     /* ----------------------------------------
        状態
     ---------------------------------------- */
@@ -716,6 +863,26 @@
       categories: [],
       transactions: []
     };
+
+
+    function updateAuthUI(user) {
+      const label = document.getElementById("auth-user-label");
+      const loginBtn = document.getElementById("login-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+      if (!label || !loginBtn || !logoutBtn) return;
+
+      if (user) {
+        const name = user.displayName || "";
+        const email = user.email || "";
+        label.textContent = name ? `${name} (${email})` : email || "ログイン済み";
+        loginBtn.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
+      } else {
+        label.textContent = "未ログイン";
+        loginBtn.classList.remove("hidden");
+        logoutBtn.classList.add("hidden");
+      }
+    }
 
     /* ----------------------------------------
        ユーティリティ
@@ -774,20 +941,69 @@
     }
 
     // 使用率による色
-    
+
     function getUsageColor(percent) {
-      if (percent <= 1) return "#777777";
+      if (percent < 0) return "#777777";
       if (percent <= 70) return "#2f88f6";
       if (percent <= 90) return "#fca21f";
       if (percent <=100) return "#f44362"; 
       return "#950dad";
     }
-function getUsageCardColor(percent) {
-      if (percent <= 1) return "#dbdbdb";
+    function getUsageCardColor(percent) {
+      if (percent < 0) return "#dbdbdb";
       if (percent <= 70) return "#cfe2fb";
       if (percent <= 90) return "#f3e0c4";
       if (percent <= 100) return "#fbc8d1"; 
       return "#d5b1de";
+    }
+
+    function hasCategoryTransactions(categoryId) {
+      return state.transactions.some((t) => t.categoryId === categoryId);
+    }
+
+    function getCategoryUsageColor(cat, percent) {
+      if (!hasCategoryTransactions(cat.id)) {
+        return "#777777";
+      }
+      return getUsageColor(percent);
+    }
+
+    function getCategoryCardColor(cat, percent) {
+      if (!hasCategoryTransactions(cat.id)) {
+        return "#dbdbdb";
+      }
+      return getUsageCardColor(percent);
+    }
+
+    // labelId:  ラベルの要素ID（絶対配置の吹き出し）
+    // segmentId: セグメント（バーの一部）の要素ID
+    // flexレイアウト＋%指定幅のセグメントでも正しくセンターXに置けるよう、
+    // style.width(%) を元に計算する
+    function positionSegmentLabel(labelId, segmentId) {
+      const segment = document.getElementById(segmentId);
+      const label = document.getElementById(labelId);
+      if (!segment || !label) return;
+
+      const bar = segment.parentElement;
+      if (!bar) return;
+
+      // このバー内のセグメントを順番に取得
+      const segments = Array.from(bar.querySelectorAll(".percent-bar-segment"));
+
+      // 対象セグメントより前のセグメント幅(%)を合計
+      let before = 0;
+      for (const seg of segments) {
+        if (seg === segment) break;
+        const w = parseFloat(seg.style.width) || 0;
+        before += w;
+      }
+
+      const currentWidth = parseFloat(segment.style.width) || 0;
+      const centerPercent = before + currentWidth / 2;
+
+      // 親(.percent-bar)に対する%で位置指定
+      label.style.left = centerPercent + "%";
+      label.style.transform = "translateX(-50%)";
     }
 
     function calcCategory(cat) {
@@ -802,14 +1018,27 @@ function getUsageCardColor(percent) {
     function calcTotal() {
       let totalBudget = 0;
       let totalUsed = 0;
+      let activeBudget = 0;
+      let standbyBudget = 0;
+      let activeUsed = 0;
+
       state.categories.forEach((cat) => {
         const { used } = calcCategory(cat);
         totalBudget += cat.budget;
         totalUsed += used;
+        const hasTransaction = state.transactions.some((t) => t.categoryId === cat.id);
+        if (hasTransaction) {
+          activeBudget += cat.budget;
+          activeUsed += used;
+        } else {
+          standbyBudget += cat.budget;
+        }
       });
       const totalRemaining = totalBudget - totalUsed;
+      const activeRemain = activeBudget - activeUsed;
       const percent = totalBudget > 0 ? (totalUsed / totalBudget) * 100 : 0;
-      return { totalBudget, totalUsed, totalRemaining, percent };
+      const percentB = activeBudget > 0 ? (activeUsed / activeBudget) * 100 : 0;
+      return { totalBudget, totalUsed, totalRemaining, percent, activeBudget, standbyBudget, percentB, activeUsed, activeRemain };
     }
 
     /* ----------------------------------------
@@ -1183,12 +1412,14 @@ function getUsageCardColor(percent) {
     }
 
     function renderSummary() {
-      const { totalBudget, totalUsed, totalRemaining, percent } = calcTotal();
+      const { totalBudget, totalUsed, totalRemaining, percent, activeBudget, standbyBudget, percentB, activeUsed, activeRemain } = calcTotal();
       const color = getUsageColor(percent);
-      const cardColor = getUsageCardColor(percent);
+      const colorB = getUsageColor(percentB);
+      const cardColor = getUsageCardColor(percentB);
 
       document.getElementById("total-budget").textContent = formatYen(totalBudget);
       document.getElementById("total-used").textContent = formatYen(totalUsed);
+      document.getElementById("total-used").style.color = color;
       const remainingEl = document.getElementById("total-remaining");
       remainingEl.textContent = formatYen(totalRemaining);
       remainingEl.style.color = color;
@@ -1200,6 +1431,71 @@ function getUsageCardColor(percent) {
       const bar = document.getElementById("total-percent-bar");
       bar.style.width = Math.min(percent, 100).toFixed(1) + "%";
       bar.style.backgroundColor = color;
+
+      const activeEl = document.getElementById("active-budget-total");
+      const standbyEl = document.getElementById("standby-budget-total");
+      if (activeEl) activeEl.textContent = formatYen(activeBudget);
+      if (standbyEl) standbyEl.textContent = formatYen(standbyBudget);
+      const activeRemainEl = document.getElementById("active-remaining");
+      activeRemainEl.textContent = formatYen(activeRemain);
+      activeRemainEl.style.color = colorB;
+      const activeUsedEl = document.getElementById("active-used");
+      activeUsedEl.textContent = formatYen(activeUsed);
+      activeUsedEl.style.color = colorB;
+      
+
+      const percentBText = document.getElementById("total-percent-b");
+      if (percentBText) {
+        percentBText.textContent = percentB.toFixed(1) + "%";
+        percentBText.style.color = colorB;
+      }
+
+      // 使用率Bバー（予算合計=100%の3分割バー）
+      const segActiveUsed = document.getElementById("percentB-active-used");
+      const segActiveRemain = document.getElementById("percentB-active-remain");
+      const segStandby = document.getElementById("percentB-standby");
+      if (segActiveUsed && segActiveRemain && segStandby) {
+        let usedWidth = 0;
+        let remainWidth = 0;
+        let standbyWidth = 0;
+
+        if (totalBudget > 0) {
+          // 活動予算内での使用額と残高を計算（オーバー分はバーに含めない）
+          const safeActiveBudget = Math.max(activeBudget, 0);
+          const usedWithinActive = Math.max(0, Math.min(activeUsed, safeActiveBudget));
+          const remainingWithinActive = Math.max(0, safeActiveBudget - usedWithinActive);
+
+          // 予算合計に対する比率に変換
+          usedWidth = (usedWithinActive / totalBudget) * 100;
+          remainWidth = (remainingWithinActive / totalBudget) * 100;
+          standbyWidth = (standbyBudget / totalBudget) * 100;
+
+          // 丸め誤差で100%を超えた場合はスケール調整
+          const sum = usedWidth + remainWidth + standbyWidth;
+          if (sum > 100 && sum > 0) {
+            const scale = 100 / sum;
+            usedWidth *= scale;
+            remainWidth *= scale;
+            standbyWidth *= scale;
+          }
+        }
+
+        segActiveUsed.style.width = usedWidth.toFixed(1) + "%";
+        segActiveRemain.style.width = remainWidth.toFixed(1) + "%";
+        segStandby.style.width = standbyWidth.toFixed(1) + "%";
+
+        // 左：活動費目使用額 / 中：活動費目残高 / 右：待機費目予算
+        segActiveUsed.style.backgroundColor = getUsageColor(percentB);
+        segActiveRemain.style.backgroundColor = "#e5e7eb";      // グレー
+        segStandby.style.backgroundColor = "#AAAAAA";      // グレー
+
+        positionSegmentLabel("label21", "percentB-active-used");   // 稼働使用額
+        positionSegmentLabel("label22", "percentB-active-remain"); // 稼働中残高
+        positionSegmentLabel("label23", "percentB-standby");       // 待機予算                
+
+        positionSegmentLabel("label11", "total-percent-bar");       //                 
+        positionSegmentLabel("label12", "percentB-standby");       // 対象セグメントがないので、とりあえず待機予算で合わせる                 
+      }
 
       const summaryCard = document.getElementById("summary-card");
       if (summaryCard) {
@@ -1218,21 +1514,43 @@ function getUsageCardColor(percent) {
       }
 
       const sorted = [...state.categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      const html = sorted.map((cat) => {
+      const active = [];
+      const standby = [];
+      sorted.forEach((cat) => {
+        const hasTransaction = state.transactions.some((t) => t.categoryId === cat.id);
+        if (hasTransaction) {
+          active.push(cat);
+        } else {
+          standby.push(cat);
+        }
+      });
+
+      const buildItemsHtml = (cats) => cats.map((cat) => {
         const { used, remaining, percent } = calcCategory(cat);
-        const usageColor = getUsageColor(percent);
+        const usageColor = getCategoryUsageColor(cat, percent);
         return `
         <div class="category-summary-item">
           <div>
-            <span class="cat-name"><B>>${cat.name}</b></span>
+            <span class="cat-name"><B>● ${cat.name}</b></span>
             <span><b>：予 ${formatYen(cat.budget)}⇒</b></span>
             <span style="color:${usageColor};"><B>残 ${formatYen(remaining)}</B></span>
           </div>
-          <div class="category-summary-separator"></div>
         </div>`;
       }).join("");
-      list.innerHTML = html;
+
+      const parts = [];
+      if (active.length > 0) {
+        parts.push('<div class="category-summary-section-title">■ 稼働中の費目</div><div class="category-summary-separator"></div>');
+        parts.push(buildItemsHtml(active));
+      }
+      if (standby.length > 0) {
+        parts.push('<div class="category-summary-section-title">□ 待機費目</div><div class="category-summary-separator"></div>');
+        parts.push(buildItemsHtml(standby));
+      }
+
+      list.innerHTML = parts.join("");
     }
+
 
 function renderCategories() {
       const container = document.getElementById("categories-container");
@@ -1250,8 +1568,8 @@ function renderCategories() {
 
       const html = state.categories.map((cat, index) => {
         const { used, remaining, percent } = calcCategory(cat);
-        const usageColor = getUsageColor(percent);
-        const cardColor = getUsageCardColor(percent);
+        const usageColor = getCategoryUsageColor(cat, percent);
+        const cardColor = getCategoryCardColor(cat, percent);
 
         const transactions = state.transactions
           .filter((t) => t.categoryId === cat.id)
@@ -1315,15 +1633,15 @@ function renderCategories() {
               </div>
             </div>
             <div class="category-footer-row">
-              <details class="cat-details">
+              <details class="cat-details" open>
                 <summary>
                   <div class="category-footer-header">
-                    <button type="button" class="btn-outline btn-xs toggle-transactions-btn">支出を表示</button>
+                    <button type="button" class="btn-outline btn-xs toggle-transactions-btn">▼ 支出を全件表示</button>
                     <button class="btn-primary toggle-add-form" type="button">支出を記録</button>
                   </div>
                 </summary>
                 <div class="category-footer-body">
-                  <div class="transaction-list">
+                  <div class="transaction-list compact">
                     ${transactionsHtml}
                   </div>
                 </div>
@@ -1366,6 +1684,34 @@ function renderCategories() {
 
     function attachGlobalEvents() {
       const yearSelect = document.getElementById("fiscal-year-select");
+
+      const loginBtn = document.getElementById("login-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+
+      if (loginBtn) {
+        loginBtn.addEventListener("click", async () => {
+          try {
+            await signInWithPopup(auth, provider);
+          } catch (e) {
+            console.error("ログインに失敗しました:", e);
+            alert("ログインに失敗しました。しばらくしてから再度お試しください。");
+          }
+        });
+      }
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          try {
+            await signOut(auth);
+            // ログアウト後は画面をリロードして状態をクリア
+            window.location.reload();
+          } catch (e) {
+            console.error("ログアウトに失敗しました:", e);
+            alert("ログアウトに失敗しました。");
+          }
+        });
+      }
+
       yearSelect.addEventListener("change", async () => {
         const y = parseInt(yearSelect.value, 10);
         if (!isNaN(y)) {
@@ -1499,23 +1845,21 @@ function renderCategories() {
     function attachCategoryAndTransactionEvents() {
       // 費目編集
 
-      // 支出表示トグルボタン
+            // 支出表示トグルボタン（全表示 / 最近2件のみ）
       document.querySelectorAll(".category-card .toggle-transactions-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          const details = btn.closest(".cat-details");
-          if (!details) return;
-          const isOpen = details.hasAttribute("open");
-          if (isOpen) {
-            details.removeAttribute("open");
-            btn.textContent = "支出を表示";
-          } else {
-            details.setAttribute("open", "");
-            btn.textContent = "支出を隠す";
-          }
+          const card = btn.closest(".category-card");
+          if (!card) return;
+          const list = card.querySelector(".transaction-list");
+          if (!list) return;
+          const isCompact = list.classList.toggle("compact");
+          // compact = 最近2件のみ表示状態
+          btn.textContent = isCompact ? " ▼ 支出を全件表示" : "▲ 最近2件のみ表示";
         });
       });
+
       document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const card = btn.closest(".category-card");
@@ -1657,7 +2001,7 @@ function renderCategories() {
     /* ----------------------------------------
        起動
     ---------------------------------------- */
-    async function bootstrap() {
+    async function initApp() {
       try {
         await loadFiscalYearsFromCategories();
         attachGlobalEvents();
@@ -1668,7 +2012,18 @@ function renderCategories() {
       }
     }
 
-    bootstrap();
+    onAuthStateChanged(auth, (user) => {
+      updateAuthUI(user);
+      if (user) {
+        if (!window.__appInitialized) {
+          window.__appInitialized = true;
+          initApp();
+        }
+      } else {
+        // 未ログイン時はユーザーにログインボタンからの操作を促す
+        console.log("未ログイン状態です。ログインボタンからサインインしてください。");
+      }
+    });
   </script>
 </body>
 </html>
