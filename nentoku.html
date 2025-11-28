@@ -761,6 +761,43 @@
 
     <div id="categories-container"></div>
 
+    <!-- 支出入力モーダル -->
+    <div id="transaction-dialog" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div id="transaction-modal-title" class="modal-title">支出の記録</div>
+        </div>
+        <form id="transaction-form">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:0.85rem;">
+              日付
+              <input type="date" id="tx-date" required
+                     style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            </label>
+            <label style="font-size:0.85rem;">
+              金額
+              <input type="number" id="tx-amount" placeholder="金額" required
+                     style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            </label>
+            <label style="font-size:0.85rem;">
+              内容
+              <input type="text" id="tx-description" placeholder="内容（例：セーター）" required
+                     style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            </label>
+            <label style="font-size:0.85rem;">
+              店舗（任意）
+              <input type="text" id="tx-shop" placeholder="店舗"
+                     style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="tx-cancel-btn" class="btn-outline">キャンセル</button>
+            <button type="submit" id="tx-save-btn" class="btn-primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- CSVインポート用ファイル入力（非表示） -->
     <input type="file" id="csv-file-input" accept=".csv,text/tab-separated-values,text/plain" class="hidden" />
 
@@ -863,6 +900,59 @@
       categories: [],
       transactions: []
     };
+
+
+    // 支出入力モーダル用の状態
+    const txModalState = {
+      mode: "create",       // "create" | "edit"
+      categoryId: null,
+      tranId: null
+    };
+
+    function openTransactionModal(options) {
+      const { mode, categoryId, tran } = options;
+      const dialog = document.getElementById("transaction-dialog");
+      const titleEl = document.getElementById("transaction-modal-title");
+      const dateInput = document.getElementById("tx-date");
+      const amountInput = document.getElementById("tx-amount");
+      const descInput = document.getElementById("tx-description");
+      const shopInput = document.getElementById("tx-shop");
+      const saveBtn = document.getElementById("tx-save-btn");
+
+      if (!dialog || !titleEl || !dateInput || !amountInput || !descInput || !saveBtn) return;
+
+      txModalState.mode = mode;
+      txModalState.categoryId = categoryId;
+      txModalState.tranId = tran ? tran.id : null;
+
+      if (mode === "create") {
+        titleEl.textContent = "支出の記録";
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, "0");
+        const d = String(today.getDate()).padStart(2, "0");
+        dateInput.value = `${y}-${m}-${d}`;
+        amountInput.value = "";
+        descInput.value = "";
+        shopInput.value = "";
+        saveBtn.textContent = "保存";
+      } else {
+        titleEl.textContent = "支出の編集";
+        dateInput.value = tran.date || "";
+        amountInput.value = tran.amount ?? "";
+        descInput.value = tran.description || "";
+        shopInput.value = tran.shop || "";
+        saveBtn.textContent = "更新";
+      }
+
+      dialog.classList.remove("hidden");
+    }
+
+    function closeTransactionModal() {
+      const dialog = document.getElementById("transaction-dialog");
+      if (!dialog) return;
+      dialog.classList.add("hidden");
+    }
 
 
     function updateAuthUI(user) {
@@ -1647,18 +1737,6 @@ function renderCategories() {
                 </div>
               </details>
             </div>
-            <form class="add-form hidden add-transaction-form" data-edit-id="">
-              <div class="add-form-row">
-                <input type="date" name="date" required />
-                <input type="number" name="amount" placeholder="金額" required />
-                <input type="text" name="description" placeholder="内容（例：セーター）" required />
-                <input type="text" name="shop" placeholder="店舗（任意）" />
-              </div>
-              <div class="add-form-actions">
-                <button type="button" class="btn-outline cancel-add">キャンセル</button>
-                <button type="submit" class="btn-primary submit-button">保存</button>
-              </div>
-            </form>
           </div>
         `;
       }).join("");      container.innerHTML = html;
@@ -1842,6 +1920,48 @@ function renderCategories() {
           alert("完了しました。ページを再読み込みしてください。");
         });
       }
+
+      // 支出入力モーダルのイベント
+      const txDialog = document.getElementById("transaction-dialog");
+      const txForm = document.getElementById("transaction-form");
+      const txCancel = document.getElementById("tx-cancel-btn");
+      if (txCancel) {
+        txCancel.addEventListener("click", () => {
+          closeTransactionModal();
+        });
+      }
+      if (txDialog) {
+        txDialog.addEventListener("click", (e) => {
+          if (e.target === txDialog) {
+            closeTransactionModal();
+          }
+        });
+      }
+      if (txForm) {
+        txForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const date = document.getElementById("tx-date").value;
+          const amountVal = parseInt(document.getElementById("tx-amount").value, 10);
+          const description = document.getElementById("tx-description").value.trim();
+          const shop = document.getElementById("tx-shop").value.trim();
+          if (!date || isNaN(amountVal) || !description) {
+            alert("日付・金額・内容は必須です。");
+            return;
+          }
+          const payload = { date, amount: amountVal, description, shop };
+          try {
+            if (txModalState.mode === "edit" && txModalState.tranId) {
+              await updateTransaction(txModalState.tranId, payload);
+            } else {
+              await addTransaction(txModalState.categoryId, payload);
+            }
+            closeTransactionModal();
+          } catch (err) {
+            console.error(err);
+            alert("支出の保存に失敗しました。");
+          }
+        });
+      }
     }
 
     function attachCategoryAndTransactionEvents() {
@@ -1912,71 +2032,27 @@ function renderCategories() {
         });
       });
 
-      // 支出追加フォームの開閉
+      // 支出追加（モーダル表示）
       document.querySelectorAll(".category-card .toggle-add-form").forEach((btn) => {
         btn.addEventListener("click", (e) => {
-          // summary 内にあるボタンの場合、details の開閉が起きないようにする
           e.stopPropagation();
           e.preventDefault();
           const card = btn.closest(".category-card");
-          const form = card.querySelector(".add-transaction-form");
-          form.dataset.editId = "";
-          form.querySelector(".submit-button").textContent = "保存";
-          form.reset();
-          form.classList.toggle("hidden");
-        });
-      });
-
-      // 支出フォーム送信
-      document.querySelectorAll(".category-card .add-transaction-form").forEach((form) => {
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const card = form.closest(".category-card");
           const catId = card.dataset.categoryId;
-          const date = form.date.value;
-          const amountVal = parseInt(form.amount.value, 10);
-          const description = form.description.value.trim();
-          const shop = form.shop.value.trim();
-          if (!date || isNaN(amountVal) || !description) {
-            alert("日付・金額・内容は必須です。");
-            return;
-          }
-          const payload = { date, amount: amountVal, description, shop };
-          const editId = form.dataset.editId;
-          if (editId) {
-            await updateTransaction(editId, payload);
-          } else {
-            await addTransaction(catId, payload);
-          }
-          form.reset();
-          form.dataset.editId = "";
-          form.classList.add("hidden");
-        });
-
-        const cancelBtn = form.querySelector(".cancel-add");
-        cancelBtn.addEventListener("click", () => {
-          form.reset();
-          form.dataset.editId = "";
-          form.classList.add("hidden");
+          openTransactionModal({ mode: "create", categoryId: catId });
         });
       });
 
-      // 支出編集
+      // 支出編集（モーダル表示）
       document.querySelectorAll(".category-card .edit-transaction").forEach((btn) => {
         btn.addEventListener("click", () => {
           const item = btn.closest(".transaction-item");
           const card = btn.closest(".category-card");
           const tranId = item.dataset.tranId;
+          const catId = card.dataset.categoryId;
           const tran = state.transactions.find((t) => t.id === tranId);
           if (!tran) return;
-          const form = card.querySelector(".add-transaction-form");
-          form.date.value = tran.date;
-          form.amount.value = tran.amount;
-          form.description.value = tran.description;
-          form.shop.value = tran.shop;
-          form.dataset.editId = tranId;
-          form.querySelector(".submit-button").textContent = "更新";
-          form.classList.remove("hidden");
+          openTransactionModal({ mode: "edit", categoryId: catId, tran });
         });
       });
 
