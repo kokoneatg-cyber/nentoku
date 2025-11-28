@@ -1682,9 +1682,7 @@ function renderCategories() {
       el.classList.add("hidden");
     }
 
-    function attachGlobalEvents() {
-      const yearSelect = document.getElementById("fiscal-year-select");
-
+    function attachAuthButtons() {
       const loginBtn = document.getElementById("login-btn");
       const logoutBtn = document.getElementById("logout-btn");
 
@@ -1711,6 +1709,10 @@ function renderCategories() {
           }
         });
       }
+    } 
+
+    function attachGlobalEvents() {
+      const yearSelect = document.getElementById("fiscal-year-select");
 
       yearSelect.addEventListener("change", async () => {
         const y = parseInt(yearSelect.value, 10);
@@ -2012,6 +2014,10 @@ function renderCategories() {
       }
     }
 
+    // ここでログインボタン／ログアウトボタンのイベントをセット
+    attachAuthButtons();
+
+    // 認証状態の監視
     onAuthStateChanged(auth, (user) => {
       updateAuthUI(user);
       if (user) {
