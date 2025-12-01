@@ -505,8 +505,14 @@
       padding-top: 4px;
     }
 
-    .transaction-list.compact .transaction-item:nth-child(n+3) {
-      display: none;
+    /* 日付ヘッダー（同じ日の支出をグループ表示） */
+    .tx-date-header {
+      margin-top: 4px;
+      margin-bottom: 2px;
+      font-size: 0.8rem;
+      color: #112233;
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
     }
 
 /* 過去の支出 1行全体 */
@@ -545,7 +551,7 @@
 
     .tran-row-type1 .tran-amount,
     .tran-row-type1 .tran-shop {
-      background-color: #b6dde3;
+      background-color: #e2f7fa;
     }
 
     .tran-row-type2 .tran-date,
@@ -555,7 +561,7 @@
 
     .tran-row-type2 .tran-amount,
     .tran-row-type2 .tran-shop {
-      background-color: #bfc6e0;
+      background-color: #dce2f9;
     }
 
 .tran-date {
@@ -981,6 +987,13 @@
       return num.toLocaleString("ja-JP") + "円";
     }
 
+    function getWeekdayJP(dateStr) {
+      const w = ["日", "月", "火", "水", "木", "金", "土"];
+      const d = new Date(dateStr);
+      if (isNaN(d)) return "";
+      return w[d.getDay()];
+    }
+
     function formatDateForView(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr || "";
@@ -1094,6 +1107,42 @@
       // 親(.percent-bar)に対する%で位置指定
       label.style.left = centerPercent + "%";
       label.style.transform = "translateX(-50%)";
+    }
+
+    // 支出一覧の「最近1件のみ表示／全件表示」を制御
+    function applyTransactionListCompactState(list) {
+      const isCompact = list.classList.contains("compact");
+      const items = Array.from(list.querySelectorAll(".transaction-item"));
+      const headers = Array.from(list.querySelectorAll(".tx-date-header"));
+
+      if (isCompact) {
+        // 先頭1件だけ表示
+        items.forEach((item, idx) => {
+          item.style.display = idx < 1 ? "flex" : "none";
+        });
+        // ヘッダーは、直後に表示中のitemがある場合のみ表示
+        headers.forEach((header) => {
+          let hasVisible = false;
+          let sib = header.nextElementSibling;
+          while (sib) {
+            if (sib.classList.contains("tx-date-header")) break;
+            if (sib.classList.contains("transaction-item") && sib.style.display !== "none") {
+              hasVisible = true;
+              break;
+            }
+            sib = sib.nextElementSibling;
+          }
+          header.style.display = hasVisible ? "block" : "none";
+        });
+      } else {
+        // 全件表示
+        items.forEach((item) => {
+          item.style.display = "flex";
+        });
+        headers.forEach((header) => {
+          header.style.display = "block";
+        });
+      }
     }
 
     function calcCategory(cat) {
@@ -1672,15 +1721,37 @@ function renderCategories() {
         const transactionsHtml =
           transactions.length === 0
             ? `<div class="transaction-empty">まだ支出の記録がありません。</div>`
-            : transactions.map((t, idx) => {
-                const dateStr = formatDateForView(t.date);
-                const amountStr = t.amount.toLocaleString("ja-JP") + "円";
-                const shopStr = t.shop || "";
-                const rowTypeClass = idx % 2 === 0 ? "tran-row-type1" : "tran-row-type2";
-                return `
+            : (() => {
+                let lastDate = null;
+                const rows = [];
+                transactions.forEach((t, idx) => {
+                  const dateKey = t.date || "";
+                  const dateStr = formatDateForView(t.date);
+                  const amountStr = t.amount.toLocaleString("ja-JP") + "円";
+                  const shopStr = t.shop || "";
+                  const rowTypeClass = idx % 2 === 0 ? "tran-row-type1" : "tran-row-type2";
+
+                  if (dateKey !== lastDate) {
+                    // 曜日
+                    const weekday = getWeekdayJP(dateKey);
+
+                    // 当日合計額を算出
+                    const dailyTotal = transactions
+                      .filter(t2 => t2.date === dateKey)
+                      .reduce((sum, t2) => sum + t2.amount, 0)
+                      .toLocaleString("ja-JP");
+
+                    rows.push(`
+                      <div class="tx-date-header">
+                        ${dateStr}（${weekday}） ： 計 ${dailyTotal}円
+                      </div>
+                    `);
+
+                    lastDate = dateKey;
+                  }
+                  rows.push(`
                   <div class="transaction-item ${rowTypeClass}" data-tran-id="${t.id}" data-category-id="${cat.id}">
                     <div class="transaction-text">
-                      <span class="tran-date">${dateStr}</span>
                       <span class="tran-amount">${amountStr}</span>
                       <span class="tran-desc">${t.description}</span>
                       <span class="tran-shop">${shopStr}</span>
@@ -1689,8 +1760,10 @@ function renderCategories() {
                       <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
                       <button type="button" class="btn-outline btn-xs delete-transaction">削除</button>
                     </div>
-                  </div>`;
-              }).join("");
+                  </div>`);
+                });
+                return rows.join("");
+              })();
 
         const isFirst = index === 0;
         const isLast = index === state.categories.length - 1;
@@ -1723,19 +1796,15 @@ function renderCategories() {
               </div>
             </div>
             <div class="category-footer-row">
-              <details class="cat-details" open>
-                <summary>
                   <div class="category-footer-header">
                     <button type="button" class="btn-outline btn-xs toggle-transactions-btn">▼ 支出を全件表示</button>
                     <button class="btn-primary toggle-add-form" type="button">支出を記録</button>
                   </div>
-                </summary>
                 <div class="category-footer-body">
                   <div class="transaction-list compact">
                     ${transactionsHtml}
                   </div>
                 </div>
-              </details>
             </div>
           </div>
         `;
@@ -1967,7 +2036,7 @@ function renderCategories() {
     function attachCategoryAndTransactionEvents() {
       // 費目編集
 
-            // 支出表示トグルボタン（全表示 / 最近2件のみ）
+            // 支出表示トグルボタン（全表示 / 最近1件のみ）
       document.querySelectorAll(".category-card .toggle-transactions-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.preventDefault();
@@ -1977,9 +2046,15 @@ function renderCategories() {
           const list = card.querySelector(".transaction-list");
           if (!list) return;
           const isCompact = list.classList.toggle("compact");
-          // compact = 最近2件のみ表示状態
-          btn.textContent = isCompact ? " ▼ 支出を全件表示" : "▲ 最近2件のみ表示";
+          // compact = 最近1件のみ表示状態
+          applyTransactionListCompactState(list);
+          btn.textContent = isCompact ? " ▼ 支出を全件表示" : "▲ 最近1件のみ表示";
         });
+      });
+
+      // 初期表示も compact 状態に合わせて2件に絞る
+      document.querySelectorAll(".category-card .transaction-list").forEach((list) => {
+        applyTransactionListCompactState(list);
       });
 
       document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
