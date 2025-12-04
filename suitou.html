@@ -1089,6 +1089,9 @@ function typeSortOrder(type) {
         });
       });
 
+      // order順にソートしてから state に反映
+      categories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
       state.currentYear = year;
       state.categories = categories;
       state.transactions = transactions;
@@ -1143,6 +1146,9 @@ function typeSortOrder(type) {
       years.sort((a, b) => a - b);
       state.years = years;
       state.currentYear = years[years.length - 1];
+
+      // order順にソートしてから state に反映
+      categories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
       state.categories = categories;
       state.transactions = transactions;
@@ -1229,18 +1235,27 @@ async function updateCategoryNameAndColor(catId, newName, newColor) {
     async function moveCategory(catId, direction) {
       const idx = state.categories.findIndex((c) => c.id === catId);
       if (idx === -1) return;
+
       const targetIdx = direction === "up" ? idx - 1 : idx + 1;
       if (targetIdx < 0 || targetIdx >= state.categories.length) return;
 
       const current = state.categories[idx];
       const other = state.categories[targetIdx];
 
+      // order が未定義または同じ値の場合でも必ず差がつくようにする
+      const currentOrder = (typeof current.order === "number" && !Number.isNaN(current.order))
+        ? current.order
+        : idx + 1;
+      const otherOrder = (typeof other.order === "number" && !Number.isNaN(other.order))
+        ? other.order
+        : targetIdx + 1;
+
       const ref1 = doc(db, CAT_COLLECTION, current.id);
       const ref2 = doc(db, CAT_COLLECTION, other.id);
 
       await Promise.all([
-        updateDoc(ref1, { order: other.order }),
-        updateDoc(ref2, { order: current.order })
+        updateDoc(ref1, { order: otherOrder }),
+        updateDoc(ref2, { order: currentOrder })
       ]);
 
       if (settings.yearFilterEnabled) {
