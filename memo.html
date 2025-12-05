@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>メモ管理アプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --primary: #1976d2;
+      --primary-light: #e3f2fd;
+      --border: #ddd;
+      --text-main: #333;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      background: var(--bg);
+    }
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px 0;
+    }
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .tab-button.active {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    main {
+      flex: 1;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    /* 共通部品 */
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .field-label {
+      font-size: 12px;
+      margin: 8px 0 4px;
+      color: #555;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      font-size: 14px;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      box-sizing: border-box;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      background: #fff;
+    }
+    .btn-primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    /* クイックメモ */
+    .quick-date {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .checklist {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      padding: 6px;
+      margin-bottom: 10px;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .checklist-item input[type="text"] {
+      flex: 1;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      padding: 2px 4px;
+      font-size: 14px;
+      background: transparent;
+    }
+
+    /* フリーメモ共通 */
+    .memo-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .memo-header .btn-group {
+      display: flex;
+      gap: 4px;
+    }
+    .memo-meta {
+      font-size: 11px;
+      color: #666;
+    }
+    .blocks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .block {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      padding: 6px;
+    }
+    .block-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .block-title {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    .bottom-toolbar {
+      position: sticky;
+      bottom: 0;
+      padding-top: 8px;
+      margin-top: 8px;
+      background: linear-gradient(to top, #fff 70%, transparent);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="tab-bar">
+        <button class="tab-button active" data-tab="quick">クイックメモ</button>
+        <button class="tab-button" data-tab="shared">フリーメモ(共有)</button>
+        <button class="tab-button" data-tab="personal">フリーメモ(個人用)</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- クイックメモ -->
+      <section id="tab-quick">
+        <div class="quick-date" id="quick-date"></div>
+        <div class="section-title">買い物チェックリスト</div>
+        <div class="checklist" id="quick-checklist">
+          <!-- JS で行を追加 -->
+        </div>
+        <button class="btn btn-sm" id="add-quick-item">項目を追加</button>
+
+        <div class="field-label">自由メモ</div>
+        <textarea id="quick-text" placeholder="メモを書いてください..."></textarea>
+
+        <div style="margin-top: 8px;">
+          <button class="btn btn-primary btn-sm" id="quick-save">クイックメモを保存</button>
+        </div>
+      </section>
+
+      <!-- フリーメモ(共有) -->
+      <section id="tab-shared" style="display:none;">
+        <div class="memo-header">
+          <div class="btn-group">
+            <button class="btn btn-sm" id="shared-new">新規メモ</button>
+            <button class="btn btn-sm" id="shared-list">メモ一覧</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-sm" id="shared-prev">←</button>
+            <button class="btn btn-sm" id="shared-next">→</button>
+          </div>
+        </div>
+        <div class="memo-meta" id="shared-meta">
+          作成日: - / 更新日: -
+        </div>
+        <div class="bottom-toolbar">
+          <button class="btn btn-sm" id="shared-add-text">テキスト</button>
+          <button class="btn btn-sm" id="shared-add-checklist">チェックリスト</button>
+          <button class="btn btn-sm" id="shared-add-draw">手書き</button>
+          <button class="btn btn-sm" id="shared-toggle-visibility">共有⇔個人用</button>
+        </div>
+        <div class="blocks" id="shared-blocks">
+          <!-- JS で block を追加 -->
+        </div>
+      </section>
+
+      <!-- フリーメモ(個人用) -->
+      <section id="tab-personal" style="display:none;">
+        <div class="memo-header">
+          <div class="btn-group">
+            <button class="btn btn-sm" id="personal-new">新規メモ</button>
+            <button class="btn btn-sm" id="personal-list">メモ一覧</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-sm" id="personal-prev">←</button>
+            <button class="btn btn-sm" id="personal-next">→</button>
+          </div>
+        </div>
+        <div class="memo-meta" id="personal-meta">
+          作成日: - / 更新日: -
+        </div>
+        <div class="bottom-toolbar">
+          <button class="btn btn-sm" id="personal-add-text">テキスト</button>
+          <button class="btn btn-sm" id="personal-add-checklist">チェックリスト</button>
+          <button class="btn btn-sm" id="personal-add-draw">手書き</button>
+          <button class="btn btn-sm" id="personal-toggle-visibility">共有⇔個人用</button>
+        </div>
+        <div class="blocks" id="personal-blocks">
+          <!-- JS で block を追加 -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ==== タブ切り替え ====
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabSections = {
+      quick: document.getElementById('tab-quick'),
+      shared: document.getElementById('tab-shared'),
+      personal: document.getElementById('tab-personal'),
+    };
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+        Object.entries(tabSections).forEach(([key, el]) => {
+          el.style.display = (key === tab) ? '' : 'none';
+        });
+      });
+    });
+
+    // ==== クイックメモ：簡易チェックリストUIのみ（まずはローカル） ====
+    const quickDateEl = document.getElementById('quick-date');
+    const quickChecklistEl = document.getElementById('quick-checklist');
+    const quickAddItemBtn = document.getElementById('add-quick-item');
+    const quickTextEl = document.getElementById('quick-text');
+    const quickSaveBtn = document.getElementById('quick-save');
+
+    function formatToday() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function renderQuickDate() {
+      quickDateEl.textContent = `日付: ${formatToday()}`;
+    }
+
+    function createChecklistRow(text = '', checked = false) {
+      const row = document.createElement('div');
+      row.className = 'checklist-item';
+      row.innerHTML = `
+        <input type="checkbox" class="quick-check" ${checked ? 'checked' : ''}>
+        <input type="text" class="quick-text" value="${text}">
+        <button type="button" class="btn btn-sm">－</button>
+      `;
+      const removeBtn = row.querySelector('button');
+      removeBtn.addEventListener('click', () => {
+        row.remove();
+      });
+      quickChecklistEl.appendChild(row);
+    }
+
+    function saveQuickToLocal() {
+      const items = [];
+      quickChecklistEl.querySelectorAll('.checklist-item').forEach(row => {
+        const check = row.querySelector('.quick-check').checked;
+        const text = row.querySelector('.quick-text').value;
+        items.push({ text, checked: check });
+      });
+      const data = {
+        date: formatToday(),
+        items,
+        memo: quickTextEl.value,
+      };
+      localStorage.setItem('quickMemo', JSON.stringify(data));
+      alert('クイックメモを一時保存しました（ローカル）。\n次のステップでFirestore保存を追加します。');
+    }
+
+    function loadQuickFromLocal() {
+      const raw = localStorage.getItem('quickMemo');
+      if (!raw) {
+        // デフォルトの行
+        ['牛乳', 'パン', '卵'].forEach(t => createChecklistRow(t, false));
+        return;
+      }
+      const data = JSON.parse(raw);
+      quickChecklistEl.innerHTML = '';
+      (data.items || []).forEach(item => {
+        createChecklistRow(item.text, item.checked);
+      });
+      quickTextEl.value = data.memo || '';
+    }
+
+    quickAddItemBtn.addEventListener('click', () => {
+      createChecklistRow('');
+    });
+    quickSaveBtn.addEventListener('click', saveQuickToLocal);
+
+    renderQuickDate();
+    loadQuickFromLocal();
+  </script>
+</body>
+</html>
