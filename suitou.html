@@ -224,6 +224,13 @@
       white-space: nowrap;
     }
 
+    .category-filter-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
     .category-footer-body {
       margin-top: 4px;
     }
@@ -261,15 +268,15 @@
     /* 1行の明細 */
 
     .transaction-item {
-  display: flex;
-  align-items: center;
-  border-bottom: 1px dashed #e5e7eb;
-  padding: 2px 4px;
-  font-size: 0.8rem;
-  gap: 6px;
-  background-color: #EEE;
-  border-radius: 4px;
-}
+      display: flex;
+      align-items: center;
+      border-bottom: 1px dashed #e5e7eb;
+      padding: 2px 4px;
+      font-size: 0.8rem;
+      gap: 6px;
+      background-color: #EEE;
+      border-radius: 4px;
+    }
 
     .transaction-text {
       flex: 1 1 auto;
@@ -287,11 +294,11 @@
     }
 
     .tran-date {
-  flex: 0 0 8ch; /* YY/MM/DD */
-  background: #EEE;
-  padding: 1px 3px;
-  border-radius: 4px;
-}
+      flex: 0 0 8ch; /* YY/MM/DD */
+      background: #EEE;
+      padding: 1px 3px;
+      border-radius: 4px;
+    }
 
     .tran-type {
       flex: 0 0 3ch;
@@ -302,26 +309,44 @@
     }
 
     .tran-account {
-  flex: 0 0 4ch;
-  text-align: center;
-  border-radius: 999px;
-  padding: 1px 3px;
-  font-size: 0.7rem;
-  background: #EEE;
-}
+      flex: 0 0 4ch;
+      text-align: center;
+      border-radius: 999px;
+      padding: 1px 3px;
+      font-size: 0.7rem;
+      background: #EEE;
+    }
 
     .tran-amount {
       flex: 0 0 9ch;
       text-align: right;
     }
 
+    /* デフォルト: 手元・銀行レコード用 (幅 10ch 固定) */
+    .tran-balance {
+      flex: 0 0 10ch;
+      text-align: right;
+      background: #ffffff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    /* 振替レコード用: 残高セルを 20ch に拡張し、その分 内容セルが狭くなる */
+    .transaction-item.tran-transfer .tran-balance {
+      flex: 0 0 20ch;
+    }
+
     .tran-desc {
-  flex: 1 1 auto;
-  min-width: 0;
-  background: #EEE;
-  padding: 1px 3px;
-  border-radius: 4px;
-}
+      flex: 1 1 auto;
+      min-width: 0;
+      background: #EEE;
+      padding: 1px 3px;
+      border-radius: 4px;
+    }
 
     .transaction-actions {
       flex-shrink: 0;
@@ -329,84 +354,98 @@
       gap: 4px;
     }
 
-    .tran-income {}
-.tran-expense-bank {}
-.tran-expense-cash {}
-.tran-transfer {}
+    /* タイプごとのセル背景色 */
+    .tran-income .tran-date,
+    .tran-income .tran-type,
+    .tran-income .tran-account,
+    .tran-income .tran-amount,
+    .tran-income .tran-desc {
+      background-color: #bdffd8;
+    }
 
-.tran-row-type1 {}
-.tran-row-type2 {}
+    .tran-expense-bank .tran-date,
+    .tran-expense-bank .tran-type,
+    .tran-expense-bank .tran-account,
+    .tran-expense-bank .tran-amount,
+    .tran-expense-bank .tran-desc {
+      background-color: #fec3ff;
+    }
 
-/* タイプごとのセル背景色 */
-.tran-income .tran-date,
-.tran-income .tran-type,
-.tran-income .tran-account,
-.tran-income .tran-amount,
-.tran-income .tran-desc {
-  background-color: #bdffd8;
-}
+    .tran-expense-cash .tran-date,
+    .tran-expense-cash .tran-type,
+    .tran-expense-cash .tran-account,
+    .tran-expense-cash .tran-amount,
+    .tran-expense-cash .tran-desc {
+      background-color: #c1d5fe;
+    }
 
-.tran-expense-bank .tran-date,
-.tran-expense-bank .tran-type,
-.tran-expense-bank .tran-account,
-.tran-expense-bank .tran-amount,
-.tran-expense-bank .tran-desc {
-  background-color: #fec3ff;
-}
+    .tran-transfer .tran-date,
+    .tran-transfer .tran-type,
+    .tran-transfer .tran-account,
+    .tran-transfer .tran-amount,
+    .tran-transfer .tran-desc {
+      background-color: #ffdea5;
+    }
 
-.tran-expense-cash .tran-date,
-.tran-expense-cash .tran-type,
-.tran-expense-cash .tran-account,
-.tran-expense-cash .tran-amount,
-.tran-expense-cash .tran-desc {
-  background-color: #c1d5fe;
-}
+    .event-group-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      font-variant-numeric: tabular-nums;
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-right: 7ch;   /* ★ 右側に 4ch の余白を空ける */
+    }
 
-.tran-transfer .tran-date,
-.tran-transfer .tran-type,
-.tran-transfer .tran-account,
-.tran-transfer .tran-amount,
-.tran-transfer .tran-desc {
-  background-color: #ffdea5;
-}
+    .event-group-label .event-label-date,
+    .event-group-label .event-label-name,
+    .event-group-label .event-label-balance {
+      background-color: #8fbc8f;
+      min-width: 7ch;
+      color: #ffffff;
+      padding: 1px 4px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
 
-
-    
-.event-group-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.event-group-label .event-label-date,
-.event-group-label .event-label-amount,
-.event-group-label .event-label-name {
-  background-color: #8fbc8f;
-  color: #ffffff;
-  padding: 1px 4px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.event-group-label .event-label-name {
-  flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+    .event-group-label .event-label-amount {
+      background-color: #8fbc8f;
+      min-width: 9ch;
+      color: #ffffff;
+      padding: 1px 4px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .event-group-label .event-label-name {
+      flex: 1 1 auto;
+      min-width: 10ch;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     @media (max-width: 480px) {
       .tran-desc {
-  flex: 1 1 auto;
-  min-width: 0;
-  background: EEE;
-  padding: 1px 3px;
-  border-radius: 4px;
-}
+        flex: 1 1 auto;
+        min-width: 0;
+        background: EEE;
+        padding: 1px 3px;
+        border-radius: 4px;
+      }
+      .tran-balance {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .event-label-balance {
+        display: none !important;
+      }
+    }
+
+    .event-label-date,
+    .tran-date {
+      font-variant-numeric: tabular-nums;
     }
 
     /* モーダル共通 */
@@ -465,7 +504,6 @@
       justify-content: flex-end;
     }
 
-
     .modal-note {
       font-size: 0.8rem;
       color: #6b7280;
@@ -480,44 +518,44 @@
       margin-bottom: 4px;
     }
 
+    .modal-actions-vertical button {
+      width: 100%;
+      justify-content: center;
+    }
 
-.modal-actions-vertical button {
-  width: 100%;
-  justify-content: center;
-}
+    .color-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
 
-.color-palette {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-}
+    .color-swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
 
-.color-swatch {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
+    .color-swatch input {
+      margin: 0;
+    }
 
-.color-swatch input {
-  margin: 0;
-}
+    .color-swatch span {
+      display: inline-block;
+      width: 20px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+    }
 
-.color-swatch span {
-  display: inline-block;
-  width: 20px;
-  height: 14px;
-  border-radius: 999px;
-  border: 1px solid #d1d5db;
-}
-
-@media (max-width: 540px) {
+    @media (max-width: 540px) {
       .transaction-text {
         gap: 3px;
       }
     }
+
   </style>
 </head>
 <body>
@@ -667,58 +705,61 @@
       </div>
     </div>
 
-
-<!-- 費目編集モーダル -->
-<div id="edit-category-dialog" class="modal hidden">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title">費目を編集</div>
-    </div>
-    <form id="edit-category-form">
-      <input type="hidden" id="edit-category-id" />
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <label>
-          費目名
-          <input type="text" id="edit-category-name" placeholder="費目名" required
-                 style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
-        </label>
-        <div>
-          カードの背景色
-          <div class="color-palette">
-            <label class="color-swatch">
-              <input type="radio" name="edit-category-color" value="#ffffff" />
-              <span style="background:#ffffff;"></span>デフォルト
-            </label>
-            <label class="color-swatch">
-              <input type="radio" name="edit-category-color" value="#ffff99" />
-              <span style="background:#ffff99;"></span>きいろ
-            </label>
-            <label class="color-swatch">
-              <input type="radio" name="edit-category-color" value="#66ccff" />
-              <span style="background:#66ccff;"></span>みずいろ
-            </label>
-            <label class="color-swatch">
-              <input type="radio" name="edit-category-color" value="#ccff99" />
-              <span style="background:#ccff99;"></span>きみどり
-            </label>
-            <label class="color-swatch">
-              <input type="radio" name="edit-category-color" value="#ff99cc" />
-              <span style="background:#ff99cc;"></span>ピンク
-            </label>
-            <label class="color-swatch">
-              <input type="radio" name="edit-category-color" value="#cc9966" />
-              <span style="background:#cc9966;"></span>カーキ
-            </label>
-          </div>
+    <!-- 費目編集モーダル -->
+    <div id="edit-category-dialog" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">費目を編集</div>
         </div>
+        <form id="edit-category-form">
+          <input type="hidden" id="edit-category-id" />
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label>
+              費目名
+              <input type="text" id="edit-category-name" placeholder="費目名" required
+                     style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:0.9rem;" />
+            </label>
+            <div>
+              カードの背景色
+              <div class="color-palette">
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#ffffff" />
+                  <span style="background:#ffffff;"></span>デフォルト
+                </label>
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#f3e0c4" />
+                  <span style="background:#f3e0c4;"></span>きいろ
+                </label>
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#bdd5f4" />
+                  <span style="background:#bdd5f4;"></span>みずいろ
+                </label>
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#d9fbc8" />
+                  <span style="background:#d9fbc8;"></span>きみどり
+                </label>
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#fbc8d1" />
+                  <span style="background:#fbc8d1;"></span>ピンク
+                </label>
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#d5b1de" />
+                  <span style="background:#d5b1de;"></span>むらさき
+                </label>
+                <label class="color-swatch">
+                  <input type="radio" name="edit-category-color" value="#d7b089" />
+                  <span style="background:#d7b089;"></span>カーキ
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-edit-category" class="btn-outline">キャンセル</button>
+            <button type="submit" class="btn-primary">保存</button>
+          </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" id="cancel-edit-category" class="btn-outline">キャンセル</button>
-        <button type="submit" class="btn-primary">保存</button>
-      </div>
-    </form>
-  </div>
-</div>
+    </div>
   </div>
 
   <script type="module">
@@ -749,7 +790,6 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // ★★★ あなたの firebaseConfig に置き換えてください ★★★
     const firebaseConfig = {
       apiKey: "AIzaSyA7UqsmHTLIr15y7I2TJFMk1xqrSBl4P2g",
       authDomain: "nentoku-3869f.firebaseapp.com",
@@ -758,7 +798,6 @@
       messagingSenderId: "153031673000",
       appId: "1:153031673000:web:87b805c4f2ca1ea7cf6e9d"
     };
-    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -781,6 +820,11 @@
       currentYear: null,
       categories: [],
       transactions: []
+    };
+
+    // UI 状態（入出金一覧の開閉など）
+    const uiState = {
+      categoryOpen: {}
     };
 
     const txModalState = {
@@ -915,16 +959,23 @@
       return "#ef4444";
     }
 
+    // 画面表示用：同じ日付のときは「支出 → 振替 → 入金」の順
+    function typeSortOrder(type) {
+      if (type === "expense") return 0;
+      if (type === "transfer") return 1;
+      return 2; // income
+    }
 
-function typeSortOrder(type) {
-  if (type === "expense") return 0;
-  if (type === "transfer") return 1;
-  return 2; // income
-}
+    // 残高計算用：同じ日付のときは「振替 → 支出 → 入金」の順
+    function balanceTypeSortOrder(type) {
+      if (type === "transfer") return 0;
+      if (type === "expense") return 1;
+      return 2; // income
+    }
 
     function accountShortLabel(account, type) {
       if (type === "transfer") {
-        return "銀→手";
+        return "振替";
       }
       if (account === "cash") return "手元";
       return "銀行";
@@ -1058,12 +1109,12 @@ function typeSortOrder(type) {
       catSnap.forEach((d) => {
         const data = d.data();
         categories.push({
-        id: d.id,
-        name: data.name,
-        order: data.order ?? 0,
-        year: data.year,
-        cardColor: data.cardColor || null
-      });
+          id: d.id,
+          name: data.name,
+          order: data.order ?? 0,
+          year: data.year,
+          cardColor: data.cardColor || null
+        });
       });
       categories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -1108,12 +1159,12 @@ function typeSortOrder(type) {
         const data = d.data();
         if (typeof data.year === "number") yearsSet.add(data.year);
         categories.push({
-        id: d.id,
-        name: data.name,
-        order: data.order ?? 0,
-        year: data.year,
-        cardColor: data.cardColor || null
-      });
+          id: d.id,
+          name: data.name,
+          order: data.order ?? 0,
+          year: data.year,
+          cardColor: data.cardColor || null
+        });
       });
       categories.sort((a, b) => {
         const ya = a.year ?? 0;
@@ -1189,27 +1240,25 @@ function typeSortOrder(type) {
       }
     }
 
+    async function updateCategoryColor(catId, newColor) {
+      const ref = doc(db, CAT_COLLECTION, catId);
+      await updateDoc(ref, { cardColor: newColor });
+      if (settings.yearFilterEnabled) {
+        await loadDataForYear(state.currentYear);
+      } else {
+        await loadAllData();
+      }
+    }
 
-
-async function updateCategoryColor(catId, newColor) {
-  const ref = doc(db, CAT_COLLECTION, catId);
-  await updateDoc(ref, { cardColor: newColor });
-  if (settings.yearFilterEnabled) {
-    await loadDataForYear(state.currentYear);
-  } else {
-    await loadAllData();
-  }
-}
-
-async function updateCategoryNameAndColor(catId, newName, newColor) {
-  const ref = doc(db, CAT_COLLECTION, catId);
-  await updateDoc(ref, { name: newName, cardColor: newColor });
-  if (settings.yearFilterEnabled) {
-    await loadDataForYear(state.currentYear);
-  } else {
-    await loadAllData();
-  }
-}
+    async function updateCategoryNameAndColor(catId, newName, newColor) {
+      const ref = doc(db, CAT_COLLECTION, catId);
+      await updateDoc(ref, { name: newName, cardColor: newColor });
+      if (settings.yearFilterEnabled) {
+        await loadDataForYear(state.currentYear);
+      } else {
+        await loadAllData();
+      }
+    }
 
     async function deleteCategoryAndTransactions(catId) {
       const ok = confirm("この費目と、その費目に紐づくすべての記録を削除します。よろしいですか？");
@@ -1605,6 +1654,53 @@ async function updateCategoryNameAndColor(catId, newName, newColor) {
       };
     }
 
+    // ※ 現在は未使用だが、同じく残高計算用の並び順を適用
+    function computeRunningBalancesForCategory(cat) {
+      const list = state.transactions
+        .filter((t) => t.categoryId === cat.id)
+        .slice()
+        .sort((a, b) => {
+          const da = a.date || "";
+          const db = b.date || "";
+          const dc = da.localeCompare(db); // 日付昇順（古い→新しい）
+          if (dc !== 0) return dc;
+          // 同じ日付内は「振替→支出→入金」の順
+          const pa = balanceTypeSortOrder(a.type);
+          const pb = balanceTypeSortOrder(b.type);
+          if (pa !== pb) return pa - pb;
+          return 0;
+        });
+
+      let bank = 0;
+      let cash = 0;
+      const map = new Map();
+
+      for (const t of list) {
+        const amt = t.amount || 0;
+        if (t.type === "transfer") {
+          // 銀行 → 手元
+          bank -= amt;
+          cash += amt;
+        } else if (t.type === "income") {
+          if (t.account === "cash") {
+            cash += amt;
+          } else {
+            bank += amt;
+          }
+        } else {
+          // 支出
+          if (t.account === "cash") {
+            cash -= amt;
+          } else {
+            bank -= amt;
+          }
+        }
+        map.set(t.id, { bank, cash });
+      }
+
+      return map;
+    }
+
     /* ----------------------------------------
        描画
     ---------------------------------------- */
@@ -1618,263 +1714,359 @@ async function updateCategoryNameAndColor(catId, newName, newColor) {
       }
     }
 
-function renderCategories() {
-  const container = document.getElementById("categories-container");
+    function renderCategories() {
+      const container = document.getElementById("categories-container");
 
-  if (state.categories.length === 0) {
-    container.innerHTML = `
-      <div class="card">
-        <div class="transaction-empty">
-          費目データがありません。「費目を追加」ボタンから費目を追加してください。
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  const html = state.categories.map((cat, index) => {
-    const { bank, cash, total } = calcBalancesForCategory(cat);
-
-    // この費目の全トランザクション（年フィルタ済み）
-    const catTransactions = state.transactions.filter((t) => t.categoryId === cat.id);
-
-    // イベントでグループ化（イベントが空文字のものは単独表示）
-    const grouped = new Map(); // eventName -> { totalIncome, totalExpense, items: [] }
-    const noEventItems = [];
-    catTransactions.forEach((t) => {
-      const amt = t.amount || 0;
-      if (!t.event) {
-        noEventItems.push(t);
-        return;
-      }
-      if (!grouped.has(t.event)) {
-        grouped.set(t.event, { totalIncome: 0, totalExpense: 0, items: [] });
-      }
-      const g = grouped.get(t.event);
-      if (t.type === "income") {
-        g.totalIncome += amt;
-      } else if (t.type === "expense") {
-        g.totalExpense += amt;
-      }
-      g.items.push(t);
-    });
-
-    // グループと単独レコードを「ブロック」としてまとめ、
-    // ブロックの日付で並べ替えて表示する
-    const blocks = [];
-
-    // イベントありグループ：グループ中の最も新しい日付をブロックの日付とする
-    let groupIndex = 0;
-    grouped.forEach((g, eventName) => {
-
-// グループ内は日付降順＋同一日付内は「入金→振替→支出」の順でソート
-g.items.sort((a, b) => {
-  const da = a.date || "";
-  const db = b.date || "";
-  const dc = (db).localeCompare(da); // 日付の降順
-  if (dc !== 0) return dc;
-  const pa = typeSortOrder(a.type);
-  const pb = typeSortOrder(b.type);
-  if (pa !== pb) return pa - pb;
-  return 0;
-});
-
-      const maxDate = g.items.reduce((max, t) => {
-        const d = t.date || "";
-        return d > max ? d : max;
-      }, "");
-      const latestDateStr = formatDateYYMMDD(maxDate);
-
-      blocks.push({
-        kind: "group",
-        sortDate: maxDate,
-        latestDateStr,
-        eventName,
-        groupIndex: groupIndex++,
-        group: g
-      });
-    });
-
-    // イベントなしの単独レコード
-    noEventItems.forEach((t) => {
-      blocks.push({
-        kind: "single",
-        sortDate: t.date || "",
-        item: t
-      });
-    });
-
-
-// ブロックを sortDate（YYYY-MM-DD）で降順ソート
-// 同じ日付内の単独レコードは「入金→振替→支出」の順にする
-blocks.sort((a, b) => {
-  const da = a.sortDate || "";
-  const db = b.sortDate || "";
-  const dc = (db).localeCompare(da); // 日付の降順
-  if (dc !== 0) return dc;
-
-  if (a.kind === "single" && b.kind === "single") {
-    const pa = typeSortOrder(a.item.type);
-    const pb = typeSortOrder(b.item.type);
-    if (pa !== pb) return pa - pb;
-  }
-  return 0;
-});
-
-    let rows = [];
-
-    blocks.forEach((block) => {
-      if (block.kind === "group") {
-        const g = block.group;
-        const eventName = block.eventName;
-        const rangeLabel = formatGroupDateRange(g.items);
-        const net = g.totalIncome - g.totalExpense;
-        const netStr = net.toLocaleString("ja-JP") + "円";
-        const groupId = `grp-${cat.id}-${block.groupIndex}`;
-
-        // グループ内明細
-        let innerRows = "";
-        g.items.forEach((t) => {
-          const dateStr = formatDateYYMMDD(t.date);
-          const sign = t.type === "income" ? "" : (t.type === "transfer" ? "±" : "-");
-          const amountStr = sign + t.amount.toLocaleString("ja-JP") + "円";
-          const typeLabelText = typeLabel(t.type);
-
-          let typeClass = "";
-          if (t.type === "income") {
-            typeClass = "tran-income";
-          } else if (t.type === "transfer") {
-            typeClass = "tran-transfer";
-          } else {
-            // expense
-            if (t.account === "cash") {
-              typeClass = "tran-expense-cash";
-            } else {
-              typeClass = "tran-expense-bank";
-            }
-          }
-
-          const accShort = accountShortLabel(t.account, t.type);
-          innerRows += `
-          <div class="transaction-item ${typeClass}" data-tran-id="${t.id}" data-category-id="${cat.id}">
-            <div class="transaction-text">
-              <span class="tran-date">${dateStr}</span>
-              <span class="tran-type" style="background:${typeBadgeColor(t.type)};color:${typeBadgeTextColor(t.type)};">
-                ${typeLabelText}
-              </span>
-              <span class="tran-account">${accShort}</span>
-              <span class="tran-amount">${amountStr}</span>
-              <span class="tran-desc">${t.description}</span>
-            </div>
-            <div class="transaction-actions">
-              <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
+      if (state.categories.length === 0) {
+        container.innerHTML = `
+          <div class="card">
+            <div class="transaction-empty">
+              費目データがありません。「費目を追加」ボタンから費目を追加してください。
             </div>
           </div>
         `;
+        return;
+      }
+
+      const html = state.categories.map((cat, index) => {
+        const { bank, cash, total } = calcBalancesForCategory(cat);
+        const isOpen = uiState.categoryOpen && uiState.categoryOpen[cat.id];
+        const listHiddenClass = isOpen ? "" : " hidden";
+        const toggleLabel = isOpen ? "▲ 入出金一覧を隠す" : "▼ 入出金一覧を表示";
+
+        // この費目の全トランザクション（年フィルタ済み）
+        const catTransactions = state.transactions.filter((t) => t.categoryId === cat.id);
+
+        // イベントでグループ化（イベントが空文字のものは単独表示）
+        const grouped = new Map(); // eventName -> { totalIncome, totalExpense, items: [] }
+        const noEventItems = [];
+        catTransactions.forEach((t) => {
+          const amt = t.amount || 0;
+          if (!t.event) {
+            noEventItems.push(t);
+            return;
+          }
+          if (!grouped.has(t.event)) {
+            grouped.set(t.event, { totalIncome: 0, totalExpense: 0, items: [] });
+          }
+          const g = grouped.get(t.event);
+          if (t.type === "income") {
+            g.totalIncome += amt;
+          } else if (t.type === "expense") {
+            g.totalExpense += amt;
+          }
+          g.items.push(t);
         });
 
-        // グループヘッダー＋ボディ（初期は非表示）
-        rows.push(`
-        <div class="event-header" data-group-id="${groupId}">
-          <button type="button" class="btn-outline btn-xs toggle-group" data-group-id="${groupId}">＋ 一覧</button>
-                    <div class="transaction-text event-group-label">
-            <span class="event-label-date">${block.latestDateStr}</span>
-            <span class="event-label-amount">${netStr}</span>
-            <span class="event-label-name">${eventName}</span>
-          </div>
-        </div>
-        <div class="event-group-body hidden" data-group-id="${groupId}">
-          ${innerRows}
-          <div class="event-separator">---------- ${eventName}</div>
-        </div>
-      `);
-      } else {
-        // 単独レコード
-        const t = block.item;
-        const dateStr = formatDateYYMMDD(t.date);
-        const sign = t.type === "income" ? "" : (t.type === "transfer" ? "±" : "-");
-        const amountStr = sign + t.amount.toLocaleString("ja-JP") + "円";
-        const typeLabelText = typeLabel(t.type);
+        // グループと単独レコードを「ブロック」としてまとめ、
+        // ブロックの日付で並べ替えて表示する
+        const blocks = [];
 
-        let typeClass = "";
-        if (t.type === "income") {
-          typeClass = "tran-income";
-        } else if (t.type === "transfer") {
-          typeClass = "tran-transfer";
-        } else {
-          // expense
-          if (t.account === "cash") {
-            typeClass = "tran-expense-cash";
-          } else {
-            typeClass = "tran-expense-bank";
+        // イベントありグループ：グループ中の最も新しい日付をブロックの日付とする
+        let groupIndex = 0;
+        grouped.forEach((g, eventName) => {
+
+          // グループ内は日付降順＋同一日付内は「支出→振替→入金」の順でソート
+          g.items.sort((a, b) => {
+            const da = a.date || "";
+            const db = b.date || "";
+            const dc = (db).localeCompare(da); // 日付の降順
+            if (dc !== 0) return dc;
+            const pa = typeSortOrder(a.type);
+            const pb = typeSortOrder(b.type);
+            if (pa !== pb) return pa - pb;
+            return 0;
+          });
+
+          const maxDate = g.items.reduce((max, t) => {
+            const d = t.date || "";
+            return d > max ? d : max;
+          }, "");
+          const latestDateStr = formatDateYYMMDD(maxDate);
+
+          blocks.push({
+            kind: "group",
+            sortDate: maxDate,
+            latestDateStr,
+            eventName,
+            groupIndex: groupIndex++,
+            group: g
+          });
+        });
+
+        // イベントなしの単独レコード
+        noEventItems.forEach((t) => {
+          blocks.push({
+            kind: "single",
+            sortDate: t.date || "",
+            item: t
+          });
+        });
+
+        // ブロックを sortDate（YYYY-MM-DD）で降順ソート
+        // 同じ日付内の単独レコードは「支出→振替→入金」の順にする
+        blocks.sort((a, b) => {
+          const da = a.sortDate || "";
+          const db = b.sortDate || "";
+          const dc = (db).localeCompare(da); // 日付の降順
+          if (dc !== 0) return dc;
+
+          if (a.kind === "single" && b.kind === "single") {
+            const pa = typeSortOrder(a.item.type);
+            const pb = typeSortOrder(b.item.type);
+            if (pa !== pb) return pa - pb;
           }
+          return 0;
+        });
+
+        let bankRunning = 0;
+        let cashRunning = 0;
+        const balancesMap = new Map();
+
+        // 一覧に表示されるトランザクションだけを集める（画面の表示順どおり）
+        const displayList = [];
+
+        blocks.forEach((block) => {
+          if (block.kind === "group") {
+            const g = block.group;
+            g.items.forEach((t) => {
+              displayList.push(t);
+            });
+          } else if (block.kind === "single") {
+            displayList.push(block.item);
+          }
+        });
+
+        // 「残高」は、一覧に表示するレコードの順番が決定してから、
+        // その表示順（下から上＝古い→新しい）に従って逐次計算する
+        for (let i = displayList.length - 1; i >= 0; i--) {
+          const t = displayList[i];
+          const amt = t.amount || 0;
+          if (t.type === "transfer") {
+            // 銀行 → 手元
+            bankRunning -= amt;
+            cashRunning += amt;
+          } else if (t.type === "income") {
+            if (t.account === "cash") {
+              cashRunning += amt;
+            } else {
+              bankRunning += amt;
+            }
+          } else {
+            // 支出
+            if (t.account === "cash") {
+              cashRunning -= amt;
+            } else {
+              bankRunning -= amt;
+            }
+          }
+          balancesMap.set(t.id, { bank: bankRunning, cash: cashRunning });
         }
 
-        const accShort = accountShortLabel(t.account, t.type);
+        let rows = [];
 
-        rows.push(`
-        <div class="transaction-item ${typeClass}" data-tran-id="${t.id}" data-category-id="${cat.id}">
-          <div class="transaction-text">
-            <span class="tran-date">${dateStr}</span>
-            <span class="tran-type" style="background:${typeBadgeColor(t.type)};color:${typeBadgeTextColor(t.type)};">
-              ${typeLabelText}
-            </span>
-            <span class="tran-account">${accShort}</span>
-            <span class="tran-amount">${amountStr}</span>
-            <span class="tran-desc">${t.description}</span>
-          </div>
-          <div class="transaction-actions">
-            <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
-          </div>
-        </div>
-      `);
-      }
-    });
+        blocks.forEach((block) => {
+          if (block.kind === "group") {
+            const g = block.group;
+            const eventName = block.eventName;
+            const rangeLabel = formatGroupDateRange(g.items);
+            const net = g.totalIncome - g.totalExpense;
+            const netStr = net.toLocaleString("ja-JP") + "円";
+            const groupId = `grp-${cat.id}-${block.groupIndex}`;
 
-    const transactionsHtml =
-      catTransactions.length === 0
-        ? `<div class="transaction-empty">まだ記録がありません。</div>`
-        : rows.join("");
+            // グループ内明細
+            let innerRows = "";
+            g.items.forEach((t) => {
+              const dateStr = formatDateYYMMDD(t.date);
+              const sign = t.type === "income" ? "" : (t.type === "transfer" ? "" : "-");
+              const amountStr = sign + t.amount.toLocaleString("ja-JP") + "円";
+              const typeLabelText = typeLabel(t.type);
 
-    const isFirst = index === 0;
-    const isLast = index === state.categories.length - 1;
-    const cardBg = cat.cardColor || "#ffffff";
+              let typeClass = "";
+              if (t.type === "income") {
+                typeClass = "tran-income";
+              } else if (t.type === "transfer") {
+                typeClass = "tran-transfer";
+              } else {
+                // expense
+                if (t.account === "cash") {
+                  typeClass = "tran-expense-cash";
+                } else {
+                  typeClass = "tran-expense-bank";
+                }
+              }
 
-    return `
-      <div class="category-card" data-category-id="${cat.id}" style="background:${cardBg};">
-        <div class="category-header">
-          <div class="category-title-row">
-            <span>● ${cat.name}</span>
-          </div>
-          <div class="category-toolbar">
-            <button type="button" class="btn-outline btn-xs reorder-up" ${isFirst ? "disabled" : ""}>▲</button>
-            <button type="button" class="btn-outline btn-xs reorder-down" ${isLast ? "disabled" : ""}>▼</button>
-            <button type="button" class="btn-outline btn-xs edit-category">編集</button>
-            <button type="button" class="btn-outline btn-xs delete-category">削除</button>
-          </div>
-        </div>
-        <div class="category-numbers">
-          <span style="font-weight:bold;">総残高<br>${formatYen(total)}</span>
-          <span style="font-weight:bold;">銀行残高<br>${formatYen(bank)}</span>
-          <span style="font-weight:bold;">手元残高<br>${formatYen(cash)}</span>
-        </div>
-        <div class="category-footer-row">
-          <div class="category-footer-header">
-            <button type="button" class="btn-outline btn-xs toggle-transactions-btn">▼ 入出金一覧を表示</button>
-            <button class="btn-primary toggle-add-form" type="button">入出金・振替を記録</button>
-          </div>
-          <div class="category-footer-body">
-            <div class="transaction-list hidden">
-              ${transactionsHtml}
+              const accShort = accountShortLabel(t.account, t.type);
+
+              const balances = balancesMap.get(t.id);
+              let balanceHtml = `<span class="tran-balance"></span>`;
+              if (balances) {
+                if (t.type === "transfer") {
+                  const bankStr = balances.bank.toLocaleString("ja-JP") + "円";
+                  const cashStr = balances.cash.toLocaleString("ja-JP") + "円";
+                  balanceHtml = `<span class="tran-balance">${bankStr}／${cashStr}</span>`;
+                } else {
+                  const balVal = t.account === "cash" ? balances.cash : balances.bank;
+                  const balStr = balVal.toLocaleString("ja-JP") + "円";
+                  const color = t.account === "cash" ? "#6a5acd" : "#c71585";
+                  balanceHtml = `<span class="tran-balance" style="color:${color};">${balStr}</span>`;
+                }
+              }
+
+              innerRows += `
+                <div class="transaction-item ${typeClass}" data-tran-id="${t.id}" data-category-id="${cat.id}" data-type="${t.type}" data-account="${t.account}">
+                  <div class="transaction-text">
+                    <span class="tran-date">${dateStr}</span>
+                    <span class="tran-type" style="background:${typeBadgeColor(t.type)};color:${typeBadgeTextColor(t.type)};">
+                      ${typeLabelText}
+                    </span>
+                    <span class="tran-account">${accShort}</span>
+                    <span class="tran-amount">${amountStr}</span>
+                    <span class="tran-desc">${t.description}</span>
+                    ${balanceHtml}
+                  </div>
+                  <div class="transaction-actions">
+                    <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
+                  </div>
+                </div>
+              `;
+            });
+
+            // グループヘッダー用 残高（グループ内で画面上いちばん上の行の残高）
+            let groupBalanceHtml = "";
+            if (g.items.length > 0) {
+              const firstTran = g.items[0];
+              const headerBalances = balancesMap.get(firstTran.id);
+              if (headerBalances) {
+                const bankStrH = headerBalances.bank.toLocaleString("ja-JP") + "円";
+                const cashStrH = headerBalances.cash.toLocaleString("ja-JP") + "円";
+                groupBalanceHtml = `<span class="event-label-balance">${bankStrH}／${cashStrH}</span>`;
+              }
+            }
+
+            // グループヘッダー＋ボディ（初期は非表示）
+            rows.push(`
+              <div class="event-header" data-group-id="${groupId}">
+                <button type="button" class="btn-outline btn-xs toggle-group" data-group-id="${groupId}">＋ 一覧</button>
+                <div class="transaction-text event-group-label">
+                  <span class="event-label-date">${block.latestDateStr}</span>
+                  <span class="event-label-amount">${netStr}</span>
+                  <span class="event-label-name">${eventName}</span>
+                  ${groupBalanceHtml}
+                </div>
+              </div>
+              <div class="event-group-body hidden" data-group-id="${groupId}">
+                ${innerRows}
+                <div class="event-separator">---------- ${eventName}</div>
+              </div>
+            `);
+          } else {
+            // 単独レコード
+            const t = block.item;
+            const dateStr = formatDateYYMMDD(t.date);
+            const sign = t.type === "income" ? "" : (t.type === "transfer" ? "" : "-");
+            const amountStr = sign + t.amount.toLocaleString("ja-JP") + "円";
+            const typeLabelText = typeLabel(t.type);
+
+            let typeClass = "";
+            if (t.type === "income") {
+              typeClass = "tran-income";
+            } else if (t.type === "transfer") {
+              typeClass = "tran-transfer";
+            } else {
+              // expense
+              if (t.account === "cash") {
+                typeClass = "tran-expense-cash";
+              } else {
+                typeClass = "tran-expense-bank";
+              }
+            }
+
+            const accShort = accountShortLabel(t.account, t.type);
+
+            const balances = balancesMap.get(t.id);
+            let balanceHtml = `<span class="tran-balance"></span>`;
+            if (balances) {
+              if (t.type === "transfer") {
+                const bankStr = balances.bank.toLocaleString("ja-JP") + "円";
+                const cashStr = balances.cash.toLocaleString("ja-JP") + "円";
+                balanceHtml = `<span class="tran-balance"><span style="color:#c71585">${bankStr}</span>／<span style="color:#6a5acd">${cashStr}</span></span>`;
+              } else {
+                const balVal = t.account === "cash" ? balances.cash : balances.bank;
+                const balStr = balVal.toLocaleString("ja-JP") + "円";
+                const color = t.account === "cash" ? "#6a5acd" : "#c71585";
+                balanceHtml = `<span class="tran-balance" style="color:${color};">${balStr}</span>`;
+              }
+            }
+
+            rows.push(`
+              <div class="transaction-item ${typeClass}" data-tran-id="${t.id}" data-category-id="${cat.id}" data-type="${t.type}" data-account="${t.account}">
+                <div class="transaction-text">
+                  <span class="tran-date">${dateStr}</span>
+                  <span class="tran-type" style="background:${typeBadgeColor(t.type)};color:${typeBadgeTextColor(t.type)};">
+                    ${typeLabelText}
+                  </span>
+                  <span class="tran-account">${accShort}</span>
+                  <span class="tran-amount">${amountStr}</span>
+                  <span class="tran-desc">${t.description}</span>
+                  ${balanceHtml}
+                </div>
+                <div class="transaction-actions">
+                  <button type="button" class="btn-outline btn-xs edit-transaction">編集</button>
+                </div>
+              </div>
+            `);
+          }
+        });
+
+        const transactionsHtml =
+          catTransactions.length === 0
+            ? `<div class="transaction-empty">まだ記録がありません。</div>`
+            : rows.join("");
+
+        const isFirst = index === 0;
+        const isLast = index === state.categories.length - 1;
+        const cardBg = cat.cardColor || "#ffffff";
+
+        return `
+          <div class="category-card" data-category-id="${cat.id}" style="background:${cardBg};">
+            <div class="category-header">
+              <div class="category-title-row">
+                <span>● ${cat.name}</span>
+              </div>
+              <div class="category-toolbar">
+                <button type="button" class="btn-outline btn-xs reorder-up" ${isFirst ? "disabled" : ""}>▲</button>
+                <button type="button" class="btn-outline btn-xs reorder-down" ${isLast ? "disabled" : ""}>▼</button>
+                <button type="button" class="btn-outline btn-xs edit-category">編集</button>
+                <button type="button" class="btn-outline btn-xs delete-category">削除</button>
+              </div>
+            </div>
+            <div class="category-numbers">
+              <span style="font-weight:bold;">総残高<br>${formatYen(total)}</span>
+              <span style="font-weight:bold; Color:#c71585">銀行残高<br>${formatYen(bank)}</span>
+              <span style="font-weight:bold; Color:#6a5acd">手元残高<br>${formatYen(cash)}</span>
+            </div>
+            <div class="category-footer-row">
+              <div class="category-footer-header">
+                <button type="button" class="btn-outline btn-xs toggle-transactions-btn">${toggleLabel}</button>
+                <div class="category-filter-buttons">
+                  <button type="button" class="btn-outline btn-xs filter-bank">銀行</button>
+                  <button type="button" class="btn-outline btn-xs filter-cash">手元</button>
+                </div>
+                <button class="btn-primary toggle-add-form" type="button">入出金・振替を記録</button>
+              </div>
+              <div class="category-footer-body">
+                <div class="transaction-list${listHiddenClass}">
+                  ${transactionsHtml}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+        `;
+      }).join("");
 
-  container.innerHTML = html;
-}
+      container.innerHTML = html;
+    }
 
     function renderAll() {
       renderYearSelect();
@@ -2017,49 +2209,48 @@ blocks.sort((a, b) => {
         downloadBlob(csv, filename);
       });
 
+      // 費目編集モーダル
+      const editCategoryDialog = document.getElementById("edit-category-dialog");
+      const editCatForm = document.getElementById("edit-category-form");
+      const cancelEditCategoryBtn = document.getElementById("cancel-edit-category");
 
-// 費目編集モーダル
-const editCategoryDialog = document.getElementById("edit-category-dialog");
-const editCatForm = document.getElementById("edit-category-form");
-const cancelEditCategoryBtn = document.getElementById("cancel-edit-category");
+      if (cancelEditCategoryBtn) {
+        cancelEditCategoryBtn.addEventListener("click", () => {
+          editCatForm.reset();
+          closeModal(editCategoryDialog);
+        });
+      }
 
-if (cancelEditCategoryBtn) {
-  cancelEditCategoryBtn.addEventListener("click", () => {
-    editCatForm.reset();
-    closeModal(editCategoryDialog);
-  });
-}
+      if (editCategoryDialog) {
+        editCategoryDialog.addEventListener("click", (e) => {
+          if (e.target === editCategoryDialog) {
+            editCatForm.reset();
+            closeModal(editCategoryDialog);
+          }
+        });
+      }
 
-if (editCategoryDialog) {
-  editCategoryDialog.addEventListener("click", (e) => {
-    if (e.target === editCategoryDialog) {
-      editCatForm.reset();
-      closeModal(editCategoryDialog);
-    }
-  });
-}
-
-if (editCatForm) {
-  editCatForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const catId = document.getElementById("edit-category-id").value;
-    const name = document.getElementById("edit-category-name").value.trim();
-    if (!name) {
-      alert("費目名を入力してください。");
-      return;
-    }
-    const colorInput = document.querySelector('input[name="edit-category-color"]:checked');
-    const color = colorInput ? colorInput.value : "#ffffff";
-    try {
-      await updateCategoryNameAndColor(catId, name, color);
-      editCatForm.reset();
-      closeModal(editCategoryDialog);
-    } catch (err) {
-      console.error(err);
-      alert("費目の更新に失敗しました。");
-    }
-  });
-}
+      if (editCatForm) {
+        editCatForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const catId = document.getElementById("edit-category-id").value;
+          const name = document.getElementById("edit-category-name").value.trim();
+          if (!name) {
+            alert("費目名を入力してください。");
+            return;
+          }
+          const colorInput = document.querySelector('input[name="edit-category-color"]:checked');
+          const color = colorInput ? colorInput.value : "#ffffff";
+          try {
+            await updateCategoryNameAndColor(catId, name, color);
+            editCatForm.reset();
+            closeModal(editCategoryDialog);
+          } catch (err) {
+            console.error(err);
+            alert("費目の更新に失敗しました。");
+          }
+        });
+      }
 
       document.getElementById("import-csv-btn").addEventListener("click", () => {
         csvInput.value = "";
@@ -2166,37 +2357,37 @@ if (editCatForm) {
           }
         });
 
-      const txDeleteBtn = document.getElementById("tx-delete-btn");
-      if (txDeleteBtn) {
-        txDeleteBtn.addEventListener("click", async () => {
-          if (txModalState.mode !== "edit" || !txModalState.tranId) {
-            return;
-          }
-          const tranId = txModalState.tranId;
-          const tran = state.transactions.find((t) => t.id === tranId);
-          const cat = state.categories.find((c) => c.id === txModalState.categoryId);
-          if (!tran || !cat) return;
-          const dateStr = formatDateYYMMDD(tran.date);
-          const amountStr = tran.amount.toLocaleString("ja-JP") + "円";
-          const typeText = tran.type === "income" ? "入金" : tran.type === "transfer" ? "振替" : "支出";
-          const summary =
-            `【費目】${cat.name}\n日付：${dateStr}\n区分：${typeText}\n金額：${amountStr}\n内容：${tran.description}`;
-          try {
-            await deleteTransaction(tranId, summary);
-            closeTransactionModal();
-          } catch (err) {
-            console.error(err);
-            alert("記録の削除に失敗しました。");
-          }
-        });
-      }
+        const txDeleteBtn = document.getElementById("tx-delete-btn");
+        if (txDeleteBtn) {
+          txDeleteBtn.addEventListener("click", async () => {
+            if (txModalState.mode !== "edit" || !txModalState.tranId) {
+              return;
+            }
+            const tranId = txModalState.tranId;
+            const tran = state.transactions.find((t) => t.id === tranId);
+            const cat = state.categories.find((c) => c.id === txModalState.categoryId);
+            if (!tran || !cat) return;
+            const dateStr = formatDateYYMMDD(tran.date);
+            const amountStr = tran.amount.toLocaleString("ja-JP") + "円";
+            const typeText = tran.type === "income" ? "入金" : tran.type === "transfer" ? "振替" : "支出";
+            const summary =
+              `【費目】${cat.name}\n日付：${dateStr}\n区分：${typeText}\n金額：${amountStr}\n内容：${tran.description}`;
+            try {
+              await deleteTransaction(tranId, summary);
+              closeTransactionModal();
+            } catch (err) {
+              console.error(err);
+              alert("記録の削除に失敗しました。");
+            }
+          });
+        }
 
       }
     }
 
     function attachCategoryAndTransactionEvents() {
 
-// 入出金一覧の表示・隠す
+      // 入出金一覧の表示・隠す
       document.querySelectorAll(".category-card .toggle-transactions-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.preventDefault();
@@ -2206,11 +2397,72 @@ if (editCatForm) {
           const list = card.querySelector(".transaction-list");
           if (!list) return;
           const hidden = list.classList.toggle("hidden");
+          const catId = card.dataset.categoryId;
+          if (catId && uiState.categoryOpen) {
+            uiState.categoryOpen[catId] = !hidden;
+          }
           btn.textContent = hidden ? "▼ 入出金一覧を表示" : "▲ 入出金一覧を隠す";
         });
       });
 
-      // 費目カード背景色の変更
+      // 「銀行のみ」「手元のみ」フィルタ
+      document.querySelectorAll(".category-card").forEach((card) => {
+        const list = card.querySelector(".transaction-list");
+        const toggleBtn = card.querySelector(".toggle-transactions-btn");
+        const bankBtn = card.querySelector(".filter-bank");
+        const cashBtn = card.querySelector(".filter-cash");
+        if (!list) return;
+
+        const applyFilter = (mode) => {
+          // mode: "all" | "bank" | "cash"
+          list.dataset.filter = mode;
+
+          // 一覧が閉じていたら開く
+          if (list.classList.contains("hidden")) {
+            list.classList.remove("hidden");
+            if (toggleBtn) {
+              toggleBtn.textContent = "▲ 入出金一覧を隠す";
+            }
+          }
+          const catId = card.dataset.categoryId;
+          if (catId && uiState.categoryOpen) {
+            uiState.categoryOpen[catId] = true;
+          }
+
+          const items = list.querySelectorAll(".transaction-item");
+          items.forEach((item) => {
+            const type = item.dataset.type;
+            const account = item.dataset.account;
+            let visible = true;
+            if (mode === "bank") {
+              visible = (type === "transfer") || (account === "bank");
+            } else if (mode === "cash") {
+              visible = (type === "transfer") || (account === "cash");
+            } else {
+              visible = true;
+            }
+            item.style.display = visible ? "" : "none";
+          });
+        };
+
+        if (bankBtn) {
+          bankBtn.addEventListener("click", () => {
+            const current = list.dataset.filter || "all";
+            const next = current === "bank" ? "all" : "bank";
+            applyFilter(next);
+          });
+        }
+
+        if (cashBtn) {
+          cashBtn.addEventListener("click", () => {
+            const current = list.dataset.filter || "all";
+            const next = current === "cash" ? "all" : "cash";
+            applyFilter(next);
+          });
+        }
+      });
+
+      // 費目カード背景色の変更（旧：prompt 版。現在は編集モーダルで実施）
       document.querySelectorAll(".category-card .edit-category-color").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const card = btn.closest(".category-card");
@@ -2231,44 +2483,44 @@ if (editCatForm) {
         });
       });
 
-// 費目編集（名前＋背景色）
-document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const card = btn.closest(".category-card");
-    const catId = card.dataset.categoryId;
-    const cat = state.categories.find((c) => c.id === catId);
-    if (!cat) return;
+      // 費目編集（名前＋背景色）
+      document.querySelectorAll(".category-card .edit-category").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          const cat = state.categories.find((c) => c.id === catId);
+          if (!cat) return;
 
-    const dialog = document.getElementById("edit-category-dialog");
-    const idInput = document.getElementById("edit-category-id");
-    const nameInput = document.getElementById("edit-category-name");
+          const dialog = document.getElementById("edit-category-dialog");
+          const idInput = document.getElementById("edit-category-id");
+          const nameInput = document.getElementById("edit-category-name");
 
-    idInput.value = catId;
-    nameInput.value = cat.name || "";
+          idInput.value = catId;
+          nameInput.value = cat.name || "";
 
-    const currentColor = cat.cardColor || "#ffffff";
-    const radios = document.querySelectorAll('input[name="edit-category-color"]');
-    let matched = false;
-    radios.forEach((r) => {
-      if (r.value === currentColor) {
-        r.checked = true;
-        matched = true;
-      }
-    });
-    if (!matched && radios.length > 0) {
-      radios[0].checked = true;
-    }
+          const currentColor = cat.cardColor || "#ffffff";
+          const radios = document.querySelectorAll('input[name="edit-category-color"]');
+          let matched = false;
+          radios.forEach((r) => {
+            if (r.value === currentColor) {
+              r.checked = true;
+              matched = true;
+            }
+          });
+          if (!matched && radios.length > 0) {
+            radios[0].checked = true;
+          }
 
-    openModal(dialog);
-  });
-});
+          openModal(dialog);
+        });
+      });
 
-// 費目削除
-document.querySelectorAll(".category-card .delete-category").forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    const card = btn.closest(".category-card");
-    const catId = card.dataset.categoryId;
-    await deleteCategoryAndTransactions(catId);
+      // 費目削除
+      document.querySelectorAll(".category-card .delete-category").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".category-card");
+          const catId = card.dataset.categoryId;
+          await deleteCategoryAndTransactions(catId);
         });
       });
 
@@ -2312,25 +2564,24 @@ document.querySelectorAll(".category-card .delete-category").forEach((btn) => {
         });
       });
 
-    
-// グループの表示・非表示
-document.querySelectorAll(".toggle-group").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const header = btn.closest(".event-header");
-    if (!header) return;
-    const body = header.nextElementSibling;
-    if (!body || !body.classList.contains("event-group-body")) return;
-    const isHidden = body.classList.contains("hidden");
-    if (isHidden) {
-      body.classList.remove("hidden");
-      btn.textContent = "－ 隠す";
-    } else {
-      body.classList.add("hidden");
-      btn.textContent = "＋ 一覧";
+      // グループの表示・非表示
+      document.querySelectorAll(".toggle-group").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const header = btn.closest(".event-header");
+          if (!header) return;
+          const body = header.nextElementSibling;
+          if (!body || !body.classList.contains("event-group-body")) return;
+          const isHidden = body.classList.contains("hidden");
+          if (isHidden) {
+            body.classList.remove("hidden");
+            btn.textContent = "－ 隠す";
+          } else {
+            body.classList.add("hidden");
+            btn.textContent = "＋ 一覧";
+          }
+        });
+      });
     }
-  });
-});
-}
 
     /* ----------------------------------------
        起動
