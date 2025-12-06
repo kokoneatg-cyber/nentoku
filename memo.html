@@ -103,27 +103,52 @@
       margin-bottom: 8px;
     }
     .checklist {
+      width: 80vw;              /* 画面横幅の80% */
+      max-width: 480px;         /* 最大幅 */
+      margin: 0 auto 10px;      /* 中央寄せ + 下だけ余白 */
       border-radius: 6px;
       border: 1px solid var(--border);
       padding: 6px;
-      margin-bottom: 10px;
     }
     .checklist-item {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 6px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;   /* 行と行の隙間を狭く */
+      padding: 4px 4px;     /* 上下の余白も控えめに */
     }
-    .checklist-item input[type="text"] {
+    .checklist-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex: 1;
-      border: none;
-      border-bottom: 1px solid var(--border);
-      padding: 2px 4px;
+      min-width: 0;
+    }
+    .quick-label {
       font-size: 14px;
-      background: transparent;
+      cursor: pointer;          /* タップ可能 */
+      user-select: none;        /* テキスト選択を防ぐ */
+      word-break: break-all;
+    }
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      padding: 0;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .icon-btn:active {
+      transform: scale(0.94);
     }
 
-    /* フリーメモ共通 */
+    /* フリーメモ共通（まだ中身はダミー） */
     .memo-header {
       display: flex;
       flex-wrap: wrap;
@@ -254,7 +279,34 @@
     </main>
   </div>
 
-  <script>
+  <!-- Firebase + アプリ本体 -->
+  <script type="module">
+    // ==== Firebase 読み込み ====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ★ここをあなたの Firebase プロジェクトの設定値に書き換えてください
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7UqsmHTLIr15y7I2TJFMk1xqrSBl4P2g",
+      authDomain: "nentoku-3869f.firebaseapp.com",
+      projectId: "nentoku-3869f",
+      storageBucket: "nentoku-3869f.firebasestorage.app",
+      messagingSenderId: "153031673000",
+      appId: "1:153031673000:web:87b805c4f2ca1ea7cf6e9d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // クイックメモ保存先：memoApp_quickMemo/default
+    const quickMemoRef = doc(db, "memoApp_quickMemo", "default");
+
     // ==== タブ切り替え ====
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabSections = {
@@ -273,12 +325,13 @@
       });
     });
 
-    // ==== クイックメモ：簡易チェックリストUIのみ（まずはローカル） ====
+    // ==== クイックメモ ====
     const quickDateEl = document.getElementById('quick-date');
     const quickChecklistEl = document.getElementById('quick-checklist');
     const quickAddItemBtn = document.getElementById('add-quick-item');
     const quickTextEl = document.getElementById('quick-text');
     const quickSaveBtn = document.getElementById('quick-save');
+    const quickSaveBtnLabel = quickSaveBtn.textContent;
 
     function formatToday() {
       const d = new Date();
@@ -295,32 +348,102 @@
     function createChecklistRow(text = '', checked = false) {
       const row = document.createElement('div');
       row.className = 'checklist-item';
+
       row.innerHTML = `
-        <input type="checkbox" class="quick-check" ${checked ? 'checked' : ''}>
-        <input type="text" class="quick-text" value="${text}">
-        <button type="button" class="btn btn-sm">－</button>
+        <div class="checklist-left">
+          <input type="checkbox" class="quick-check" ${checked ? 'checked' : ''}>
+          <span class="quick-label"></span>
+        </div>
+        <button type="button" class="icon-btn delete-btn" aria-label="削除">🗑</button>
       `;
-      const removeBtn = row.querySelector('button');
-      removeBtn.addEventListener('click', () => {
-        row.remove();
+
+      const checkbox = row.querySelector('.quick-check');
+      const labelSpan = row.querySelector('.quick-label');
+      const deleteBtn = row.querySelector('.delete-btn');
+
+      labelSpan.textContent = text;
+
+      // 長押しで1つ上へ移動
+      let longPressTriggered = false;
+      let pressTimer = null;
+
+      const moveUp = (rowEl) => {
+        const prev = rowEl.previousElementSibling;
+        if (prev && prev.classList.contains('checklist-item')) {
+          quickChecklistEl.insertBefore(rowEl, prev);
+        }
+      };
+
+      const startPress = () => {
+        if (pressTimer != null) return;
+        pressTimer = window.setTimeout(() => {
+          longPressTriggered = true;
+          pressTimer = null;
+          moveUp(row);
+        }, 500); // 500ms 長押し
+      };
+
+      const cancelPress = () => {
+        if (pressTimer != null) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
+      // 長押し検知（マウス & タッチ）
+      labelSpan.addEventListener('mousedown', startPress);
+      labelSpan.addEventListener('touchstart', startPress);
+
+      labelSpan.addEventListener('mouseup', cancelPress);
+      labelSpan.addEventListener('mouseleave', cancelPress);
+      labelSpan.addEventListener('touchend', cancelPress);
+      labelSpan.addEventListener('touchmove', cancelPress);
+
+      // 短くタップ → チェックON/OFF
+      labelSpan.addEventListener('click', () => {
+        if (longPressTriggered) {
+          longPressTriggered = false;
+          return;
+        }
+        checkbox.checked = !checkbox.checked;
       });
+
+      // 削除ボタン
+      deleteBtn.addEventListener('click', () => {
+        const labelText = labelSpan.textContent || 'この項目';
+        const ok = window.confirm(`「${labelText}」を削除してもよいですか？`);
+        if (ok) {
+          row.remove();
+        }
+      });
+
       quickChecklistEl.appendChild(row);
     }
 
-    function saveQuickToLocal() {
+    function collectQuickData() {
       const items = [];
       quickChecklistEl.querySelectorAll('.checklist-item').forEach(row => {
         const check = row.querySelector('.quick-check').checked;
-        const text = row.querySelector('.quick-text').value;
+        const text = row.querySelector('.quick-label').textContent;
         items.push({ text, checked: check });
       });
-      const data = {
+      return {
         date: formatToday(),
         items,
         memo: quickTextEl.value,
       };
+    }
+
+    function applyQuickData(data) {
+      quickChecklistEl.innerHTML = '';
+      (data.items || []).forEach(item => {
+        createChecklistRow(item.text, item.checked);
+      });
+      quickTextEl.value = data.memo || '';
+    }
+
+    function saveQuickToLocal(data) {
       localStorage.setItem('quickMemo', JSON.stringify(data));
-      alert('クイックメモを一時保存しました（ローカル）。\n次のステップでFirestore保存を追加します。');
     }
 
     function loadQuickFromLocal() {
@@ -330,21 +453,82 @@
         ['牛乳', 'パン', '卵'].forEach(t => createChecklistRow(t, false));
         return;
       }
-      const data = JSON.parse(raw);
-      quickChecklistEl.innerHTML = '';
-      (data.items || []).forEach(item => {
-        createChecklistRow(item.text, item.checked);
-      });
-      quickTextEl.value = data.memo || '';
+      try {
+        const data = JSON.parse(raw);
+        applyQuickData(data);
+      } catch (e) {
+        console.error('ローカルデータの読み込みに失敗', e);
+        ['牛乳', 'パン', '卵'].forEach(t => createChecklistRow(t, false));
+      }
     }
 
-    quickAddItemBtn.addEventListener('click', () => {
-      createChecklistRow('');
-    });
-    quickSaveBtn.addEventListener('click', saveQuickToLocal);
+    async function saveQuickToFirestore(data) {
+      await setDoc(
+        quickMemoRef,
+        {
+          ...data,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
 
+    async function loadQuickFromFirestore() {
+      try {
+        const snap = await getDoc(quickMemoRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          applyQuickData(data);
+          // Firestore の内容をローカルにも同期
+          saveQuickToLocal({
+            date: data.date || formatToday(),
+            items: data.items || [],
+            memo: data.memo || '',
+          });
+          return true;
+        } else {
+          // Firestoreにまだ何もない → ローカル or デフォルト
+          loadQuickFromLocal();
+          return false;
+        }
+      } catch (e) {
+        console.error('Firestore からの読み込みに失敗', e);
+        loadQuickFromLocal();
+        return false;
+      }
+    }
+
+    // 追加ボタン → ダイアログで項目名入力
+    quickAddItemBtn.addEventListener('click', () => {
+      const label = window.prompt('追加する項目名を入力してください：', '');
+      if (!label) return;
+      createChecklistRow(label, false);
+    });
+
+    // 保存ボタン → Firestore + localStorage
+    quickSaveBtn.addEventListener('click', async () => {
+      const data = collectQuickData();
+
+      quickSaveBtn.disabled = true;
+      quickSaveBtn.textContent = '保存中...';
+
+      try {
+        await saveQuickToFirestore(data);
+        saveQuickToLocal(data);
+        alert('Firestore に保存しました。\n他の端末からも同じクイックメモを参照できます。');
+      } catch (e) {
+        console.error('保存エラー', e);
+        saveQuickToLocal(data);
+        alert('Firestore への保存に失敗しました。\n通信状況を確認してください。\nローカルには保存されています。');
+      } finally {
+        quickSaveBtn.disabled = false;
+        quickSaveBtn.textContent = quickSaveBtnLabel;
+      }
+    });
+
+    // 初期化
     renderQuickDate();
-    loadQuickFromLocal();
+    loadQuickFromFirestore();
   </script>
 </body>
 </html>
