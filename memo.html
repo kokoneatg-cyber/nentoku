@@ -31,6 +31,7 @@
     .tab-bar {
       display: flex;
       gap: 4px;
+      margin-top: 4px;
     }
     .tab-button {
       flex: 1;
@@ -48,13 +49,12 @@
       color: var(--primary);
       font-weight: 600;
     }
-    /* auth row */
+    /* auth row: 画面一番上に表示 */
     .auth-row {
       display: flex;
       justify-content: flex-end;
       align-items: center;
       gap: 8px;
-      margin-top: 4px;
       font-size: 12px;
       color: #6b7280;
     }
@@ -116,12 +116,19 @@
     .quick-date {
       font-size: 12px;
       color: #666;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
+    }
+    .quick-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
     }
     .checklist {
-      width: 80vw;              /* 画面横幅の80% */
-      max-width: 480px;         /* 最大幅 */
-      margin: 0 auto 10px;      /* 中央寄せ + 下だけ余白 */
+      width: 80vw;
+      max-width: 480px;
+      margin: 0 auto 10px;
       border-radius: 6px;
       border: 1px solid var(--border);
       padding: 6px;
@@ -131,8 +138,8 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      margin-bottom: 2px;   /* 行と行の隙間を狭く */
-      padding: 4px 4px;     /* 上下の余白も控えめに */
+      margin-bottom: 2px;
+      padding: 4px 4px;
     }
     .checklist-left {
       display: flex;
@@ -142,9 +149,9 @@
       min-width: 0;
     }
     .quick-label {
-      font-size: 14px;
-      cursor: pointer;          /* タップ可能 */
-      user-select: none;        /* テキスト選択を防ぐ */
+      font-size: 1.3rem;
+      cursor: pointer;
+      user-select: none;
       word-break: break-all;
     }
     .icon-btn {
@@ -216,33 +223,36 @@
 <body>
   <div class="app">
     <header>
-      <div class="tab-bar">
-        <button class="tab-button active" data-tab="quick">クイックメモ</button>
-        <button class="tab-button" data-tab="shared">フリーメモ(共有)</button>
-        <button class="tab-button" data-tab="personal">フリーメモ(個人用)</button>
-      </div>
       <div class="auth-row">
         <span id="auth-user-label" class="auth-user-label">未ログイン</span>
         <button id="login-btn" class="btn btn-sm">Googleでログイン</button>
         <button id="logout-btn" class="btn btn-sm" style="display:none;">ログアウト</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-button active" data-tab="quick">クイックメモ</button>
+        <button class="tab-button" data-tab="shared">フリーメモ(共有)</button>
+        <button class="tab-button" data-tab="personal">フリーメモ(個人用)</button>
       </div>
     </header>
 
     <main>
       <!-- クイックメモ -->
       <section id="tab-quick">
-        <div class="quick-date" id="quick-date"></div>
-        <div class="section-title">買い物チェックリスト</div>
+        <div class="quick-date" id="quick-date">メモ作成日: -</div>
+        <div class="quick-header-row">
+          <div class="section-title">買い物チェックリスト</div>
+          <button class="btn btn-sm" id="quick-reset">全リセット</button>
+        </div>
         <div class="checklist" id="quick-checklist">
           <!-- JS で行を追加 -->
         </div>
         <button class="btn btn-sm" id="add-quick-item">項目を追加</button>
 
         <div class="field-label">自由メモ</div>
-        <textarea id="quick-text" placeholder="メモを書いてください..."></textarea>
+        <textarea id="quick-text" placeholder="メモ..."></textarea>
 
         <div style="margin-top: 8px;">
-          <button class="btn btn-primary btn-sm" id="quick-save">クイックメモを保存</button>
+          <button class="btn btn-primary btn-sm" id="quick-save" style="display:none;">クイックメモを保存</button>
         </div>
       </section>
 
@@ -365,9 +375,12 @@
     const quickDateEl = document.getElementById('quick-date');
     const quickChecklistEl = document.getElementById('quick-checklist');
     const quickAddItemBtn = document.getElementById('add-quick-item');
+    const quickResetBtn = document.getElementById('quick-reset');
     const quickTextEl = document.getElementById('quick-text');
     const quickSaveBtn = document.getElementById('quick-save');
     const quickSaveBtnLabel = quickSaveBtn.textContent;
+
+    let quickDirty = false;
 
     function formatToday() {
       const d = new Date();
@@ -377,8 +390,21 @@
       return `${y}-${m}-${day}`;
     }
 
-    function renderQuickDate() {
-      quickDateEl.textContent = `日付: ${formatToday()}`;
+    function updateQuickDateLabel(dateString) {
+      if (dateString) {
+        quickDateEl.textContent = `メモ作成日: ${dateString}`;
+      } else {
+        quickDateEl.textContent = 'メモ作成日: -';
+      }
+    }
+
+    function setQuickDirty(dirty = true) {
+      quickDirty = dirty;
+      if (dirty) {
+        quickSaveBtn.style.display = 'inline-flex';
+      } else {
+        quickSaveBtn.style.display = 'none';
+      }
     }
 
     function createChecklistRow(text = '', checked = false) {
@@ -407,6 +433,7 @@
         const prev = rowEl.previousElementSibling;
         if (prev && prev.classList.contains('checklist-item')) {
           quickChecklistEl.insertBefore(rowEl, prev);
+          setQuickDirty(true);
         }
       };
 
@@ -442,6 +469,7 @@
           return;
         }
         checkbox.checked = !checkbox.checked;
+        setQuickDirty(true);
       });
 
       // 削除ボタン
@@ -450,6 +478,7 @@
         const ok = window.confirm(`「${labelText}」を削除してもよいですか？`);
         if (ok) {
           row.remove();
+          setQuickDirty(true);
         }
       });
 
@@ -476,6 +505,8 @@
         createChecklistRow(item.text, item.checked);
       });
       quickTextEl.value = data.memo || '';
+      updateQuickDateLabel(data.date);
+      setQuickDirty(false);
     }
 
     function saveQuickToLocal(data) {
@@ -486,7 +517,11 @@
       const raw = localStorage.getItem('quickMemo');
       if (!raw) {
         // デフォルトの行
+        quickChecklistEl.innerHTML = '';
         ['牛乳', 'パン', '卵'].forEach(t => createChecklistRow(t, false));
+        quickTextEl.value = '';
+        updateQuickDateLabel(null);
+        setQuickDirty(false);
         return;
       }
       try {
@@ -494,7 +529,11 @@
         applyQuickData(data);
       } catch (e) {
         console.error('ローカルデータの読み込みに失敗', e);
+        quickChecklistEl.innerHTML = '';
         ['牛乳', 'パン', '卵'].forEach(t => createChecklistRow(t, false));
+        quickTextEl.value = '';
+        updateQuickDateLabel(null);
+        setQuickDirty(false);
       }
     }
 
@@ -517,7 +556,7 @@
           applyQuickData(data);
           // Firestore の内容をローカルにも同期
           saveQuickToLocal({
-            date: data.date || formatToday(),
+            date: data.date || null,
             items: data.items || [],
             memo: data.memo || '',
           });
@@ -540,6 +579,26 @@
         const label = window.prompt('追加する項目名を入力してください：', '');
         if (!label) return;
         createChecklistRow(label, false);
+        setQuickDirty(true);
+      });
+
+      // 全リセットボタン
+      quickResetBtn.addEventListener('click', () => {
+        const ok = window.confirm('チェックの状態とメモを全てリセットします。よろしいですか？');
+        if (!ok) return;
+        // 全項目のチェックをオフにする
+        quickChecklistEl.querySelectorAll('.quick-check').forEach(cb => {
+          cb.checked = false;
+        });
+        // 自由メモをクリア
+        quickTextEl.value = '';
+        // 作成日はそのまま、変更フラグのみON
+        setQuickDirty(true);
+      });
+
+      // メモ入力で変更フラグ
+      quickTextEl.addEventListener('input', () => {
+        setQuickDirty(true);
       });
 
       // 保存ボタン → Firestore + localStorage
@@ -552,11 +611,14 @@
         try {
           await saveQuickToFirestore(data);
           saveQuickToLocal(data);
+          updateQuickDateLabel(data.date);
+          setQuickDirty(false);
           alert('Firestore に保存しました。\n他の端末からも同じクイックメモを参照できます。');
         } catch (e) {
           console.error('保存エラー', e);
           saveQuickToLocal(data);
           alert('Firestore への保存に失敗しました。\n通信状況を確認してください。\nローカルには保存されています。');
+          setQuickDirty(true);
         } finally {
           quickSaveBtn.disabled = false;
           quickSaveBtn.textContent = quickSaveBtnLabel;
@@ -616,7 +678,7 @@
     let appInitialized = false;
 
     async function initApp() {
-      renderQuickDate();
+      updateQuickDateLabel(null);
       attachQuickEvents();
       await loadQuickFromFirestore();
     }
