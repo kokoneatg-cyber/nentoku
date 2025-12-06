@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -26,7 +26,7 @@
     header {
       background: #fff;
       border-bottom: 1px solid var(--border);
-      padding: 8px 10px 0;
+      padding: 8px 10px 4px;
     }
     .tab-bar {
       display: flex;
@@ -47,6 +47,22 @@
       border-bottom: 0;
       color: var(--primary);
       font-weight: 600;
+    }
+    /* auth row */
+    .auth-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .auth-user-label {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     main {
       flex: 1;
@@ -205,6 +221,11 @@
         <button class="tab-button" data-tab="shared">フリーメモ(共有)</button>
         <button class="tab-button" data-tab="personal">フリーメモ(個人用)</button>
       </div>
+      <div class="auth-row">
+        <span id="auth-user-label" class="auth-user-label">未ログイン</span>
+        <button id="login-btn" class="btn btn-sm">Googleでログイン</button>
+        <button id="logout-btn" class="btn btn-sm" style="display:none;">ログアウト</button>
+      </div>
     </header>
 
     <main>
@@ -282,16 +303,25 @@
   <!-- Firebase + アプリ本体 -->
   <script type="module">
     // ==== Firebase 読み込み ====
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import {
       getFirestore,
       doc,
       getDoc,
       setDoc,
       serverTimestamp,
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithPopup,
+      GoogleAuthProvider,
+      setPersistence,
+      browserLocalPersistence,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // ★ここをあなたの Firebase プロジェクトの設定値に書き換えてください
+    // nentoku.html と同じプロジェクト設定
     const firebaseConfig = {
       apiKey: "AIzaSyA7UqsmHTLIr15y7I2TJFMk1xqrSBl4P2g",
       authDomain: "nentoku-3869f.firebaseapp.com",
@@ -303,6 +333,12 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    setPersistence(auth, browserLocalPersistence).catch((e) => {
+      console.error("Auth persistence error:", e);
+    });
 
     // クイックメモ保存先：memoApp_quickMemo/default
     const quickMemoRef = doc(db, "memoApp_quickMemo", "default");
@@ -498,37 +534,104 @@
       }
     }
 
-    // 追加ボタン → ダイアログで項目名入力
-    quickAddItemBtn.addEventListener('click', () => {
-      const label = window.prompt('追加する項目名を入力してください：', '');
-      if (!label) return;
-      createChecklistRow(label, false);
-    });
+    function attachQuickEvents() {
+      // 追加ボタン → ダイアログで項目名入力
+      quickAddItemBtn.addEventListener('click', () => {
+        const label = window.prompt('追加する項目名を入力してください：', '');
+        if (!label) return;
+        createChecklistRow(label, false);
+      });
 
-    // 保存ボタン → Firestore + localStorage
-    quickSaveBtn.addEventListener('click', async () => {
-      const data = collectQuickData();
+      // 保存ボタン → Firestore + localStorage
+      quickSaveBtn.addEventListener('click', async () => {
+        const data = collectQuickData();
 
-      quickSaveBtn.disabled = true;
-      quickSaveBtn.textContent = '保存中...';
+        quickSaveBtn.disabled = true;
+        quickSaveBtn.textContent = '保存中...';
 
-      try {
-        await saveQuickToFirestore(data);
-        saveQuickToLocal(data);
-        alert('Firestore に保存しました。\n他の端末からも同じクイックメモを参照できます。');
-      } catch (e) {
-        console.error('保存エラー', e);
-        saveQuickToLocal(data);
-        alert('Firestore への保存に失敗しました。\n通信状況を確認してください。\nローカルには保存されています。');
-      } finally {
-        quickSaveBtn.disabled = false;
-        quickSaveBtn.textContent = quickSaveBtnLabel;
+        try {
+          await saveQuickToFirestore(data);
+          saveQuickToLocal(data);
+          alert('Firestore に保存しました。\n他の端末からも同じクイックメモを参照できます。');
+        } catch (e) {
+          console.error('保存エラー', e);
+          saveQuickToLocal(data);
+          alert('Firestore への保存に失敗しました。\n通信状況を確認してください。\nローカルには保存されています。');
+        } finally {
+          quickSaveBtn.disabled = false;
+          quickSaveBtn.textContent = quickSaveBtnLabel;
+        }
+      });
+    }
+
+    // ==== 認証UI ====
+    function updateAuthUI(user) {
+      const label = document.getElementById("auth-user-label");
+      const loginBtn = document.getElementById("login-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+      if (!label || !loginBtn || !logoutBtn) return;
+
+      if (user) {
+        const name = user.displayName || "";
+        const email = user.email || "";
+        label.textContent = name ? `${name} (${email})` : email || "ログイン済み";
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-flex";
+      } else {
+        label.textContent = "未ログイン";
+        loginBtn.style.display = "inline-flex";
+        logoutBtn.style.display = "none";
+      }
+    }
+
+    function attachAuthButtons() {
+      const loginBtn = document.getElementById("login-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+
+      if (loginBtn) {
+        loginBtn.addEventListener("click", async () => {
+          try {
+            await signInWithPopup(auth, provider);
+          } catch (e) {
+            console.error("ログインに失敗しました:", e);
+            alert("ログインに失敗しました。しばらくしてから再度お試しください。");
+          }
+        });
+      }
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          try {
+            await signOut(auth);
+            window.location.reload();
+          } catch (e) {
+            console.error("ログアウトに失敗しました:", e);
+            alert("ログアウトに失敗しました。");
+          }
+        });
+      }
+    }
+
+    // ==== アプリ初期化 ====
+    let appInitialized = false;
+
+    async function initApp() {
+      renderQuickDate();
+      attachQuickEvents();
+      await loadQuickFromFirestore();
+    }
+
+    attachAuthButtons();
+
+    onAuthStateChanged(auth, (user) => {
+      updateAuthUI(user);
+      if (user && !appInitialized) {
+        appInitialized = true;
+        initApp();
+      } else if (!user) {
+        console.log("未ログイン状態です。ログインボタンからサインインしてください。");
       }
     });
-
-    // 初期化
-    renderQuickDate();
-    loadQuickFromFirestore();
   </script>
 </body>
 </html>
