@@ -261,8 +261,12 @@
 
     .event-separator {
       font-size: 0.75rem;
-      color: #9ca3af;
-      margin: 2px 0 4px;
+    }
+    /* グループ内の最終行（---------- イベント名）の背景色 */
+    .event-group-body .event-separator {
+      background-color: #40e0d0;
+      border-radius: 4px;
+      padding: 0 4px;
     }
 
     /* 1行の明細 */
@@ -276,6 +280,11 @@
       gap: 6px;
       background-color: #EEE;
       border-radius: 4px;
+    }
+
+    /* グループのレコード一覧の行背景色 */
+    .event-group-body .transaction-item {
+      background-color: #40e0d0;
     }
 
     .transaction-text {
