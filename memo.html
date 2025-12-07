@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #f5f5f5;
+      --bg: #E0E8E9;
       --primary: #1976d2;
       --primary-light: #e3f2fd;
       --border: #ddd;
@@ -16,7 +16,7 @@
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text-main);
-      background: var(--bg);
+      background: var(--bg); /* 画面全体の背景 */
     }
     .app {
       min-height: 100vh;
@@ -24,7 +24,7 @@
       flex-direction: column;
     }
     header {
-      background: #fff;
+      background: #FFFFFF;
       border-bottom: 1px solid var(--border);
       padding: 8px 10px 4px;
     }
@@ -43,11 +43,16 @@
       white-space: nowrap;
     }
     .tab-button.active {
-      background: #fff;
+      background: #E0E8E9;
       border: 1px solid var(--border);
       border-bottom: 0;
       color: var(--primary);
       font-weight: 600;
+    }
+    .tab-spacer {
+      width: 100%;
+      height: 12px;
+      background: #E0E8E9;
     }
     /* auth row: 画面一番上に表示 */
     .auth-row {
@@ -66,7 +71,7 @@
     }
     main {
       flex: 1;
-      background: #fff;
+      background: var(--bg);
       border-top: 1px solid var(--border);
       padding: 10px;
       overflow-y: auto;
@@ -76,7 +81,7 @@
     .section-title {
       font-size: 16px;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
     .field-label {
       font-size: 12px;
@@ -91,6 +96,7 @@
       border-radius: 4px;
       border: 1px solid var(--border);
       box-sizing: border-box;
+      background: #FFFFFF;
     }
     .btn {
       display: inline-flex;
@@ -118,11 +124,16 @@
       color: #666;
       margin-bottom: 4px;
     }
+    /* チェックリストとヘッダーを揃えるためのコンテナ */
+    .quick-header-container {
+      width: 80vw;
+      max-width: 480px;
+      margin: 0 auto 4px;
+    }
     .quick-header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
       margin-bottom: 4px;
     }
     .checklist {
@@ -132,6 +143,7 @@
       border-radius: 6px;
       border: 1px solid var(--border);
       padding: 6px;
+      background: #FFFFFF;
     }
     .checklist-item {
       display: flex;
@@ -170,8 +182,34 @@
     .icon-btn:active {
       transform: scale(0.94);
     }
+    /* 項目を追加ボタンもチェックリストと同じ左端にそろえる */
+    .quick-add-btn {
+      margin-top: 2px;
+    }
 
-    /* フリーメモ共通（まだ中身はダミー） */
+        .quick-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+.shared-block-textarea {
+  width: 100%;
+  min-height: 80px;
+  font-size: 14px;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+  background: #FFFFFF;
+}
+.shared-block-header {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+/* フリーメモ共通（まだ中身はダミー） */
     .memo-header {
       display: flex;
       flex-wrap: wrap;
@@ -196,6 +234,7 @@
       border-radius: 6px;
       border: 1px solid var(--border);
       padding: 6px;
+      background: #FFFFFF;
     }
     .block-toolbar {
       display: flex;
@@ -233,20 +272,28 @@
         <button class="tab-button" data-tab="shared">フリーメモ(共有)</button>
         <button class="tab-button" data-tab="personal">フリーメモ(個人用)</button>
       </div>
+      <div class="tab-spacer"></div>
     </header>
 
     <main>
       <!-- クイックメモ -->
       <section id="tab-quick">
         <div class="quick-date" id="quick-date">メモ作成日: -</div>
-        <div class="quick-header-row">
-          <div class="section-title">買い物チェックリスト</div>
-          <button class="btn btn-sm" id="quick-reset">全リセット</button>
+
+        <!-- ラベルと全リセット + 項目を追加をチェックリストの左端にそろえたブロック -->
+        <div class="quick-header-container">
+          <div class="quick-header-row">
+            <div class="quick-header-left">
+              <div class="section-title">買い物チェックリスト</div>
+              <button class="btn btn-sm" id="quick-reset">全リセット</button>
+            </div>
+            <button class="btn btn-sm quick-add-btn" id="add-quick-item">項目を追加</button>
+          </div>
         </div>
+
         <div class="checklist" id="quick-checklist">
           <!-- JS で行を追加 -->
         </div>
-        <button class="btn btn-sm" id="add-quick-item">項目を追加</button>
 
         <div class="field-label">自由メモ</div>
         <textarea id="quick-text" placeholder="メモ..."></textarea>
@@ -276,6 +323,7 @@
           <button class="btn btn-sm" id="shared-add-checklist">チェックリスト</button>
           <button class="btn btn-sm" id="shared-add-draw">手書き</button>
           <button class="btn btn-sm" id="shared-toggle-visibility">共有⇔個人用</button>
+          <button class="btn btn-sm btn-primary" id="shared-save">メモを保存</button>
         </div>
         <div class="blocks" id="shared-blocks">
           <!-- JS で block を追加 -->
@@ -294,7 +342,7 @@
             <button class="btn btn-sm" id="personal-next">→</button>
           </div>
         </div>
-        <div class="memo-meta" id="personal-meta">
+        <div class="memo-meta">
           作成日: - / 更新日: -
         </div>
         <div class="bottom-toolbar">
@@ -312,7 +360,6 @@
 
   <!-- Firebase + アプリ本体 -->
   <script type="module">
-    // ==== Firebase 読み込み ====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import {
       getFirestore,
@@ -331,7 +378,6 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // nentoku.html と同じプロジェクト設定
     const firebaseConfig = {
       apiKey: "AIzaSyA7UqsmHTLIr15y7I2TJFMk1xqrSBl4P2g",
       authDomain: "nentoku-3869f.firebaseapp.com",
@@ -350,10 +396,8 @@
       console.error("Auth persistence error:", e);
     });
 
-    // クイックメモ保存先：memoApp_quickMemo/default
     const quickMemoRef = doc(db, "memoApp_quickMemo", "default");
 
-    // ==== タブ切り替え ====
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabSections = {
       quick: document.getElementById('tab-quick'),
@@ -371,7 +415,6 @@
       });
     });
 
-    // ==== クイックメモ ====
     const quickDateEl = document.getElementById('quick-date');
     const quickChecklistEl = document.getElementById('quick-checklist');
     const quickAddItemBtn = document.getElementById('add-quick-item');
@@ -425,7 +468,6 @@
 
       labelSpan.textContent = text;
 
-      // 長押しで1つ上へ移動
       let longPressTriggered = false;
       let pressTimer = null;
 
@@ -443,7 +485,7 @@
           longPressTriggered = true;
           pressTimer = null;
           moveUp(row);
-        }, 500); // 500ms 長押し
+        }, 500);
       };
 
       const cancelPress = () => {
@@ -453,7 +495,6 @@
         }
       };
 
-      // 長押し検知（マウス & タッチ）
       labelSpan.addEventListener('mousedown', startPress);
       labelSpan.addEventListener('touchstart', startPress);
 
@@ -462,7 +503,6 @@
       labelSpan.addEventListener('touchend', cancelPress);
       labelSpan.addEventListener('touchmove', cancelPress);
 
-      // 短くタップ → チェックON/OFF
       labelSpan.addEventListener('click', () => {
         if (longPressTriggered) {
           longPressTriggered = false;
@@ -472,7 +512,6 @@
         setQuickDirty(true);
       });
 
-      // 削除ボタン
       deleteBtn.addEventListener('click', () => {
         const labelText = labelSpan.textContent || 'この項目';
         const ok = window.confirm(`「${labelText}」を削除してもよいですか？`);
@@ -516,7 +555,6 @@
     function loadQuickFromLocal() {
       const raw = localStorage.getItem('quickMemo');
       if (!raw) {
-        // デフォルトの行
         quickChecklistEl.innerHTML = '';
         ['牛乳', 'パン', '卵'].forEach(t => createChecklistRow(t, false));
         quickTextEl.value = '';
@@ -554,7 +592,6 @@
         if (snap.exists()) {
           const data = snap.data();
           applyQuickData(data);
-          // Firestore の内容をローカルにも同期
           saveQuickToLocal({
             date: data.date || null,
             items: data.items || [],
@@ -562,7 +599,6 @@
           });
           return true;
         } else {
-          // Firestoreにまだ何もない → ローカル or デフォルト
           loadQuickFromLocal();
           return false;
         }
@@ -574,7 +610,6 @@
     }
 
     function attachQuickEvents() {
-      // 追加ボタン → ダイアログで項目名入力
       quickAddItemBtn.addEventListener('click', () => {
         const label = window.prompt('追加する項目名を入力してください：', '');
         if (!label) return;
@@ -582,26 +617,20 @@
         setQuickDirty(true);
       });
 
-      // 全リセットボタン
       quickResetBtn.addEventListener('click', () => {
         const ok = window.confirm('チェックの状態とメモを全てリセットします。よろしいですか？');
         if (!ok) return;
-        // 全項目のチェックをオフにする
         quickChecklistEl.querySelectorAll('.quick-check').forEach(cb => {
           cb.checked = false;
         });
-        // 自由メモをクリア
         quickTextEl.value = '';
-        // 作成日はそのまま、変更フラグのみON
         setQuickDirty(true);
       });
 
-      // メモ入力で変更フラグ
       quickTextEl.addEventListener('input', () => {
         setQuickDirty(true);
       });
 
-      // 保存ボタン → Firestore + localStorage
       quickSaveBtn.addEventListener('click', async () => {
         const data = collectQuickData();
 
@@ -626,7 +655,6 @@
       });
     }
 
-    // ==== 認証UI ====
     function updateAuthUI(user) {
       const label = document.getElementById("auth-user-label");
       const loginBtn = document.getElementById("login-btn");
@@ -674,13 +702,230 @@
       }
     }
 
-    // ==== アプリ初期化 ====
+// ==== フリーメモ(共有) ====
+const sharedBlocksEl = document.getElementById('shared-blocks');
+const sharedAddTextBtn = document.getElementById('shared-add-text');
+const sharedSaveBtn = document.getElementById('shared-save');
+const sharedMetaEl = document.getElementById('shared-meta');
+
+const sharedMemoRef = doc(db, "memoApp_freeMemos", "shared_default");
+
+let sharedMemo = null;
+let sharedDirty = false;
+
+function setSharedDirty(dirty = true) {
+  sharedDirty = dirty;
+  if (sharedSaveBtn) {
+    sharedSaveBtn.disabled = !dirty;
+  }
+}
+
+function ensureSharedMemo() {
+  if (!sharedMemo) {
+    sharedMemo = {
+      blocks: [],
+      createdAt: null,
+      updatedAt: null,
+      scope: "shared",
+    };
+  }
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return '-';
+  try {
+    const d = ts.toDate ? ts.toDate() : ts;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day} ${hh}:${mm}`;
+  } catch (e) {
+    return '-';
+  }
+}
+
+function updateSharedMeta() {
+  if (!sharedMetaEl || !sharedMemo) return;
+  const created = sharedMemo.createdAt || null;
+  const updated = sharedMemo.updatedAt || null;
+  const createdText = created ? formatTimestamp(created) : '-';
+  const updatedText = updated ? formatTimestamp(updated) : '-';
+  sharedMetaEl.textContent = `作成日: ${createdText} / 更新日: ${updatedText}`;
+}
+
+function renderSharedBlocks() {
+  if (!sharedBlocksEl) return;
+  sharedBlocksEl.innerHTML = '';
+  if (!sharedMemo || !Array.isArray(sharedMemo.blocks)) return;
+
+  sharedMemo.blocks.forEach((block, index) => {
+    if (block.type === 'text') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'block block-text';
+      wrapper.dataset.blockId = block.id || String(index);
+
+      const header = document.createElement('div');
+      header.className = 'shared-block-header';
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'btn btn-sm';
+      upBtn.textContent = '↑';
+      upBtn.addEventListener('click', () => {
+        if (index <= 0) return;
+        const arr = sharedMemo.blocks;
+        [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      const downBtn = document.createElement('button');
+      downBtn.className = 'btn btn-sm';
+      downBtn.textContent = '↓';
+      downBtn.addEventListener('click', () => {
+        const arr = sharedMemo.blocks;
+        if (index >= arr.length - 1) return;
+        [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-sm';
+      delBtn.textContent = '削除';
+      delBtn.addEventListener('click', () => {
+        const arr = sharedMemo.blocks;
+        arr.splice(index, 1);
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      header.appendChild(upBtn);
+      header.appendChild(downBtn);
+      header.appendChild(delBtn);
+
+      const ta = document.createElement('textarea');
+      ta.className = 'shared-block-textarea';
+      ta.value = block.text || '';
+      ta.placeholder = 'テキストを入力...';
+      ta.addEventListener('input', () => {
+        block.text = ta.value;
+        setSharedDirty(true);
+      });
+
+      wrapper.appendChild(header);
+      wrapper.appendChild(ta);
+      sharedBlocksEl.appendChild(wrapper);
+    } else {
+      // まだ未対応のタイプ
+      const wrapper = document.createElement('div');
+      wrapper.className = 'block';
+      wrapper.textContent = `未対応のブロックタイプ: ${block.type}`;
+      sharedBlocksEl.appendChild(wrapper);
+    }
+  });
+}
+
+async function loadSharedMemo() {
+  try {
+    const snap = await getDoc(sharedMemoRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      sharedMemo = {
+        blocks: Array.isArray(data.blocks) ? data.blocks : [],
+        createdAt: data.createdAt || null,
+        updatedAt: data.updatedAt || null,
+        scope: data.scope || 'shared',
+      };
+    } else {
+      ensureSharedMemo();
+    }
+    renderSharedBlocks();
+    updateSharedMeta();
+    setSharedDirty(false);
+  } catch (e) {
+    console.error('共有メモの読み込みに失敗しました', e);
+    ensureSharedMemo();
+    renderSharedBlocks();
+    updateSharedMeta();
+    setSharedDirty(false);
+  }
+}
+
+async function saveSharedMemo() {
+  if (!sharedMemo) ensureSharedMemo();
+  try {
+    const payload = {
+      blocks: sharedMemo.blocks || [],
+      scope: 'shared',
+    };
+    if (!sharedMemo.createdAt) {
+      payload.createdAt = serverTimestamp();
+    }
+    payload.updatedAt = serverTimestamp();
+
+    await setDoc(sharedMemoRef, payload, { merge: true });
+
+    const snap = await getDoc(sharedMemoRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      sharedMemo.createdAt = data.createdAt || sharedMemo.createdAt || null;
+      sharedMemo.updatedAt = data.updatedAt || sharedMemo.updatedAt || null;
+    }
+
+    updateSharedMeta();
+    setSharedDirty(false);
+    alert('フリーメモ(共有)を保存しました。');
+  } catch (e) {
+    console.error('共有メモの保存に失敗しました', e);
+    alert('フリーメモ(共有)の保存に失敗しました。通信状況を確認してください。');
+  }
+}
+
+function attachSharedEvents() {
+  if (sharedAddTextBtn) {
+    sharedAddTextBtn.addEventListener('click', () => {
+      ensureSharedMemo();
+      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + String(Math.random());
+      sharedMemo.blocks.push({
+        id,
+        type: 'text',
+        text: '',
+      });
+      setSharedDirty(true);
+      renderSharedBlocks();
+    });
+  }
+  if (sharedSaveBtn) {
+    sharedSaveBtn.addEventListener('click', () => {
+      saveSharedMemo();
+    });
+    sharedSaveBtn.disabled = true;
+  }
+  // まだチェックリスト/手書きは未実装なので、案内だけ出す
+  const sharedAddChecklistBtn = document.getElementById('shared-add-checklist');
+  const sharedAddDrawBtn = document.getElementById('shared-add-draw');
+  if (sharedAddChecklistBtn) {
+    sharedAddChecklistBtn.addEventListener('click', () => {
+      alert('チェックリストブロックは、次のステップで実装予定です。');
+    });
+  }
+  if (sharedAddDrawBtn) {
+    sharedAddDrawBtn.addEventListener('click', () => {
+      alert('手書きブロックは、次のステップで実装予定です。');
+    });
+  }
+}
+
     let appInitialized = false;
 
     async function initApp() {
       updateQuickDateLabel(null);
       attachQuickEvents();
+      attachSharedEvents();
       await loadQuickFromFirestore();
+      await loadSharedMemo();
     }
 
     attachAuthButtons();
