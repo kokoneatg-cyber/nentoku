@@ -209,6 +209,57 @@
   gap: 4px;
   margin-bottom: 4px;
 }
+.shared-block-tools {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.shared-checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.shared-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shared-check-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.shared-check-text-input {
+  flex: 1;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+}
+.shared-drawing-canvas {
+  width: 100%;
+  height: 220px;
+  background: #FFFFFF;
+  touch-action: none; /* タッチスクロールを無効化して描画しやすく */
+  display: block;
+}
+.shared-drawing-controls {
+  margin-top: 4px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+
+
 /* フリーメモ共通（まだ中身はダミー） */
     .memo-header {
       display: flex;
@@ -219,6 +270,32 @@
     .memo-header .btn-group {
       display: flex;
       gap: 4px;
+    }
+    .memo-header-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .memo-header-left,
+    .memo-header-right {
+      flex: 1;
+      display: flex;
+    }
+
+    .memo-header-left {
+      justify-content: flex-start; /* 左寄せ */
+    }
+
+    .memo-header-right {
+      justify-content: flex-end;   /* 右寄せ */
+    }
+
+    .memo-header-center {
+      flex: 2;
+      display: flex;
+      justify-content: center;     /* 中央寄せ */
+      gap: 6px;                    /* ボタン間の間隔 */
     }
     .memo-meta {
       font-size: 11px;
@@ -305,28 +382,39 @@
 
       <!-- フリーメモ(共有) -->
       <section id="tab-shared" style="display:none;">
-        <div class="memo-header">
-          <div class="btn-group">
+        <div class="memo-header memo-header-flex">
+
+          <!-- 左側（←） -->
+          <div class="memo-header-left">
+            <button class="btn btn-sm" id="shared-prev"><b>←</b></button>
+          </div>
+
+          <!-- 中央（新規・一覧・共有⇔個人用） -->
+          <div class="memo-header-center">
             <button class="btn btn-sm" id="shared-new">新規メモ</button>
             <button class="btn btn-sm" id="shared-list">メモ一覧</button>
+            <button class="btn btn-sm" id="shared-toggle-visibility">共有⇔個人用</button>
           </div>
-          <div class="btn-group">
-            <button class="btn btn-sm" id="shared-prev">←</button>
-            <button class="btn btn-sm" id="shared-next">→</button>
+
+          <!-- 右側（→） -->
+          <div class="memo-header-right">
+            <button class="btn btn-sm" id="shared-next"><b>→</b></button>
           </div>
+
         </div>
         <div class="memo-meta" id="shared-meta">
           作成日: - / 更新日: -
         </div>
         <div class="bottom-toolbar">
-          <button class="btn btn-sm" id="shared-add-text">テキスト</button>
-          <button class="btn btn-sm" id="shared-add-checklist">チェックリスト</button>
-          <button class="btn btn-sm" id="shared-add-draw">手書き</button>
-          <button class="btn btn-sm" id="shared-toggle-visibility">共有⇔個人用</button>
-          <button class="btn btn-sm btn-primary" id="shared-save">メモを保存</button>
+          <button class="btn btn-sm btn-primary" id="shared-save" style="display:none;">メモを保存</button>
         </div>
         <div class="blocks" id="shared-blocks">
           <!-- JS で block を追加 -->
+        </div>
+        <div class="shared-block-tools">
+          <button class="btn btn-sm" id="shared-add-text">テキスト</button>
+          <button class="btn btn-sm" id="shared-add-checklist">チェックリスト</button>
+          <button class="btn btn-sm" id="shared-add-draw">手書き</button>
         </div>
       </section>
 
@@ -467,6 +555,12 @@
       const deleteBtn = row.querySelector('.delete-btn');
 
       labelSpan.textContent = text;
+
+      // チェックボックスを直接タップしたときもダーティ扱いにする
+      checkbox.addEventListener('change', () => {
+        setQuickDirty(true);
+      });
+
 
       let longPressTriggered = false;
       let pressTimer = null;
@@ -716,7 +810,7 @@ let sharedDirty = false;
 function setSharedDirty(dirty = true) {
   sharedDirty = dirty;
   if (sharedSaveBtn) {
-    sharedSaveBtn.disabled = !dirty;
+    sharedSaveBtn.style.display = dirty ? 'inline-flex' : 'none';
   }
 }
 
@@ -817,6 +911,255 @@ function renderSharedBlocks() {
       wrapper.appendChild(header);
       wrapper.appendChild(ta);
       sharedBlocksEl.appendChild(wrapper);
+    } else if (block.type === 'checklist') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'block block-checklist';
+      wrapper.dataset.blockId = block.id || String(index);
+
+      const header = document.createElement('div');
+      header.className = 'shared-block-header';
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'btn btn-sm';
+      upBtn.textContent = '↑';
+      upBtn.addEventListener('click', () => {
+        if (index <= 0) return;
+        const arr = sharedMemo.blocks;
+        [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      const downBtn = document.createElement('button');
+      downBtn.className = 'btn btn-sm';
+      downBtn.textContent = '↓';
+      downBtn.addEventListener('click', () => {
+        const arr = sharedMemo.blocks;
+        if (index >= arr.length - 1) return;
+        [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-sm';
+      delBtn.textContent = '削除';
+      delBtn.addEventListener('click', () => {
+        const arr = sharedMemo.blocks;
+        arr.splice(index, 1);
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      header.appendChild(upBtn);
+      header.appendChild(downBtn);
+      header.appendChild(delBtn);
+
+      const itemsContainer = document.createElement('div');
+      itemsContainer.className = 'shared-checklist-items';
+
+      const items = Array.isArray(block.items) ? block.items : [];
+      items.forEach((item, itemIndex) => {
+        const row = document.createElement('div');
+        row.className = 'shared-checklist-item';
+
+        row.innerHTML = `
+          <div class="shared-check-left">
+            <input type="checkbox" class="shared-check-input" ${item.checked ? 'checked' : ''}>
+            <input type="text" class="shared-check-text-input">
+          </div>
+          <button type="button" class="icon-btn shared-check-delete" aria-label="削除">🗑</button>
+        `;
+
+        const checkbox = row.querySelector('.shared-check-input');
+        const textInput = row.querySelector('.shared-check-text-input');
+        const deleteBtn = row.querySelector('.shared-check-delete');
+
+        textInput.value = item.text || '';
+
+        checkbox.addEventListener('change', () => {
+          item.checked = checkbox.checked;
+          setSharedDirty(true);
+        });
+
+        textInput.addEventListener('input', () => {
+          item.text = textInput.value;
+          setSharedDirty(true);
+        });
+
+        deleteBtn.addEventListener('click', () => {
+          items.splice(itemIndex, 1);
+          block.items = items;
+          setSharedDirty(true);
+          renderSharedBlocks();
+        });
+
+        itemsContainer.appendChild(row);
+      });
+
+      const addItemBtn = document.createElement('button');
+      addItemBtn.className = 'btn btn-sm';
+      addItemBtn.textContent = '項目を追加';
+      addItemBtn.addEventListener('click', () => {
+        const arr = Array.isArray(block.items) ? block.items : (block.items = []);
+        const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + String(Math.random());
+        arr.push({
+          id,
+          text: '',
+          checked: false,
+        });
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      wrapper.appendChild(header);
+      wrapper.appendChild(itemsContainer);
+      wrapper.appendChild(addItemBtn);
+      sharedBlocksEl.appendChild(wrapper);
+    } else if (block.type === 'drawing') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'block block-drawing';
+      wrapper.dataset.blockId = block.id || String(index);
+
+      const header = document.createElement('div');
+      header.className = 'shared-block-header';
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'btn btn-sm';
+      upBtn.textContent = '↑';
+      upBtn.addEventListener('click', () => {
+        if (index <= 0) return;
+        const arr = sharedMemo.blocks;
+        [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      const downBtn = document.createElement('button');
+      downBtn.className = 'btn btn-sm';
+      downBtn.textContent = '↓';
+      downBtn.addEventListener('click', () => {
+        const arr = sharedMemo.blocks;
+        if (index >= arr.length - 1) return;
+        [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-sm';
+      delBtn.textContent = '削除';
+      delBtn.addEventListener('click', () => {
+        const arr = sharedMemo.blocks;
+        arr.splice(index, 1);
+        setSharedDirty(true);
+        renderSharedBlocks();
+      });
+
+      header.appendChild(upBtn);
+      header.appendChild(downBtn);
+      header.appendChild(delBtn);
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'shared-drawing-canvas';
+
+      const controls = document.createElement('div');
+      controls.className = 'shared-drawing-controls';
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'btn btn-sm';
+      clearBtn.textContent = 'クリア';
+      controls.appendChild(clearBtn);
+
+      wrapper.appendChild(header);
+      wrapper.appendChild(canvas);
+      wrapper.appendChild(controls);
+      sharedBlocksEl.appendChild(wrapper);
+
+      const ctx = canvas.getContext('2d');
+      // 適当な内部解像度。CSS 側で width:100% で伸縮。
+      canvas.width = 600;
+      canvas.height = 220;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+
+      // 保存済みの画像があれば復元
+      if (block.imageData) {
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = block.imageData;
+      }
+
+      let drawing = false;
+      let lastX = 0;
+      let lastY = 0;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches && e.touches[0]) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top,
+        };
+      }
+
+      function startDraw(e) {
+        e.preventDefault();
+        const pos = getPos(e);
+        drawing = true;
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+
+      function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+
+      function endDraw() {
+        if (!drawing) return;
+        drawing = false;
+        try {
+          block.imageData = canvas.toDataURL('image/png');
+          setSharedDirty(true);
+        } catch (err) {
+          console.error('toDataURL error', err);
+        }
+      }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', endDraw);
+      canvas.addEventListener('touchcancel', endDraw);
+
+      clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        block.imageData = null;
+        setSharedDirty(true);
+      });
+
     } else {
       // まだ未対応のタイプ
       const wrapper = document.createElement('div');
@@ -901,19 +1244,41 @@ function attachSharedEvents() {
     sharedSaveBtn.addEventListener('click', () => {
       saveSharedMemo();
     });
-    sharedSaveBtn.disabled = true;
   }
   // まだチェックリスト/手書きは未実装なので、案内だけ出す
   const sharedAddChecklistBtn = document.getElementById('shared-add-checklist');
   const sharedAddDrawBtn = document.getElementById('shared-add-draw');
   if (sharedAddChecklistBtn) {
     sharedAddChecklistBtn.addEventListener('click', () => {
-      alert('チェックリストブロックは、次のステップで実装予定です。');
+      ensureSharedMemo();
+      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + String(Math.random());
+      const itemId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + String(Math.random());
+      sharedMemo.blocks.push({
+        id,
+        type: 'checklist',
+        items: [
+          {
+            id: itemId,
+            text: '',
+            checked: false,
+          }
+        ],
+      });
+      setSharedDirty(true);
+      renderSharedBlocks();
     });
   }
   if (sharedAddDrawBtn) {
     sharedAddDrawBtn.addEventListener('click', () => {
-      alert('手書きブロックは、次のステップで実装予定です。');
+      ensureSharedMemo();
+      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + String(Math.random());
+      sharedMemo.blocks.push({
+        id,
+        type: 'drawing',
+        imageData: null,
+      });
+      setSharedDirty(true);
+      renderSharedBlocks();
     });
   }
 }
